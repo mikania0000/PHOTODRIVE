@@ -42,6 +42,19 @@
             text-shadow: 0 0 20px rgba(188, 19, 254, 0.6), 0 0 40px rgba(188, 19, 254, 0.3);
         }
 
+        /* 抽籤滾動特效 */
+        .slot-machine-anim {
+            animation: slot-scroll 0.1s infinite linear;
+            filter: blur(4px);
+            opacity: 0.7;
+        }
+
+        @keyframes slot-scroll {
+            0% { transform: translateY(-5px); }
+            50% { transform: translateY(5px); }
+            100% { transform: translateY(-5px); }
+        }
+
         .rank-1 { 
             background: linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%) !important; 
             border-left: 8px solid var(--gold) !important;
@@ -121,11 +134,35 @@
             z-index: 50;
         }
         
-        /* 動態按鈕樣式 */
         .btn-success { background-color: #10b981 !important; color: white !important; }
+
+        /* 密碼彈窗 */
+        #password-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
 <body class="min-h-screen overflow-hidden">
+
+    <!-- 密碼驗證彈窗 -->
+    <div id="password-modal">
+        <div class="glass-card p-8 rounded-3xl border-red-500/50 w-80 text-center">
+            <h3 class="text-xl font-bold text-red-500 mb-4 tech-font tracking-widest">RESTRICTED ACCESS</h3>
+            <p class="text-sm text-slate-400 mb-6">請輸入管理員密碼以進行重設</p>
+            <input type="password" id="reset-pw-input" class="w-full bg-black/50 border border-slate-700 rounded-xl py-3 text-center text-white tech-font mb-4 tracking-[1em] focus:border-red-500 outline-none">
+            <div class="flex gap-2">
+                <button onclick="closePwModal()" class="flex-1 py-2 bg-slate-800 rounded-lg text-sm text-white">取消</button>
+                <button onclick="confirmFullReset()" class="flex-1 py-2 bg-red-600 rounded-lg text-sm text-white font-bold">確認</button>
+            </div>
+        </div>
+    </div>
 
     <div id="init-modal" class="fixed inset-0 z-[200] flex items-center justify-center">
         <div class="absolute inset-0 bg-black/95 backdrop-blur-xl"></div>
@@ -142,14 +179,14 @@
         <header class="flex justify-between items-end mb-6">
             <div class="flex flex-col">
                 <h1 class="main-title tracking-tighter text-shadow-lg">資優盃光の驅動車大賽</h1>
-                <p class="text-xs text-cyan-500/80 font-bold tech-font tracking-[0.3em]">PREMIUM COMPETITION SYSTEM V5.4</p>
+                <p class="text-xs text-cyan-500/80 font-bold tech-font tracking-[0.3em]">PREMIUM COMPETITION SYSTEM V5.5</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="exportToCloud()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 text-xs font-bold hover:bg-emerald-600/40 transition-all">
                     <span id="sync-icon">☁️</span> <span id="sync-text">雲端存檔</span>
                 </button>
                 <button onclick="toggleManage()" class="px-4 py-2 rounded-full border border-slate-700 text-slate-400 text-xs font-bold hover:bg-white/5 transition-all">隊伍管理</button>
-                <button onclick="fullReset()" class="px-4 py-2 rounded-full border border-red-900/50 text-red-500 text-xs font-bold hover:bg-red-900/20 transition-all">遊戲重設</button>
+                <button onclick="openPwModal()" class="px-4 py-2 rounded-full border border-red-900/50 text-red-500 text-xs font-bold hover:bg-red-900/20 transition-all">遊戲重設</button>
             </div>
         </header>
 
@@ -190,7 +227,7 @@
                     </div>
 
                     <div class="flex flex-wrap justify-center gap-4">
-                        <button onclick="drawMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-black shadow-lg transition-transform active:scale-95">隨機抽籤</button>
+                        <button id="draw-btn" onclick="drawMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-black shadow-lg transition-transform active:scale-95">隨機抽籤</button>
                         <button id="timer-btn" onclick="toggleTimer()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-3 rounded-xl font-black shadow-lg transition-transform active:scale-95">開始計時</button>
                         <button onclick="saveMatch()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-black shadow-lg transition-transform active:scale-95">紀錄成績</button>
                     </div>
@@ -221,6 +258,7 @@
         let teams = Array.from({ length: 10 }, (_, i) => ({ id: Date.now() + i, name: `第 ${i + 1} 隊`, score: 0, hasRaced: false }));
         let p1Data = null, p2Data = null, defaultSeconds = 60, timerVal = 60, isRunning = false, interval = null;
         let sortTimeout = null;
+        let isDrawing = false;
 
         function speak(text) {
             if ('speechSynthesis' in window) {
@@ -262,6 +300,38 @@
         function closeInitModal() { document.getElementById('init-modal').style.display = 'none'; updateUI(); }
         function toggleManage() { document.getElementById('setup-panel').classList.toggle('hidden'); }
         function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2500); }
+
+        function openPwModal() {
+            document.getElementById('password-modal').style.display = 'flex';
+            document.getElementById('reset-pw-input').focus();
+        }
+
+        function closePwModal() {
+            document.getElementById('password-modal').style.display = 'none';
+            document.getElementById('reset-pw-input').value = "";
+        }
+
+        function confirmFullReset() {
+            const pw = document.getElementById('reset-pw-input').value;
+            if (pw === "00000") {
+                closePwModal();
+                teams = teams.map(t => ({...t, score: 0, hasRaced: false}));
+                p1Data = null; p2Data = null;
+                document.getElementById('p1-name').innerText = "---";
+                document.getElementById('p2-name').innerText = "---";
+                document.getElementById('p1-score').value = "";
+                document.getElementById('p2-score').value = "";
+                resetTimer();
+                updateUI();
+                exportToCloud();
+                notify("🔄 核心重置完成，數據已歸零");
+                speak("系統已重設，所有戰績歸零");
+            } else {
+                notify("❌ 密碼錯誤，拒絕存取");
+                document.getElementById('reset-pw-input').value = "";
+                document.getElementById('reset-pw-input').classList.add('border-red-500');
+            }
+        }
 
         function updateUI(skipSort = false) {
             const list = document.getElementById('team-list');
@@ -317,53 +387,41 @@
             const input = document.getElementById(`input-${id}`);
             const btn = document.getElementById(`btn-${id}`);
             const newName = input.value.trim();
-            
             if (!newName) return notify("隊名不能為空");
-
-            // 更新本地數據
             teams = teams.map(t => t.id === id ? {...t, name: newName} : t);
-            
-            // 按鈕視覺回饋
             btn.classList.add('btn-success');
             btn.innerText = "已存";
-            
             setTimeout(() => {
                 btn.classList.remove('btn-success');
                 btn.innerText = "儲存";
-                updateUI(true); // 僅更新 UI 不重新排序，避免正在編輯時列表跳動
+                updateUI(true);
             }, 1000);
-
             notify(`✅ 已暫存隊名：${newName}`);
         }
 
         async function saveAllTeams() {
             const btn = document.getElementById('save-all-btn');
             const originalText = btn.innerHTML;
-            
-            // 讀取目前畫面上所有的 input 值以確保最新
             teams = teams.map(t => {
                 const input = document.getElementById(`input-${t.id}`);
                 return input ? {...t, name: input.value} : t;
             });
-
             btn.disabled = true;
             btn.innerHTML = "⌛ 同步中...";
             btn.classList.add('opacity-70');
-
             try {
                 await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(teams) });
                 notify("🚀 所有隊伍資料已同步至雲端");
                 btn.classList.remove('bg-indigo-600');
                 btn.classList.add('bg-emerald-600');
                 btn.innerHTML = "✅ 同步完成";
-                
                 setTimeout(() => {
                     btn.classList.remove('bg-emerald-600');
                     btn.classList.add('bg-indigo-600');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     btn.classList.remove('opacity-70');
-                    updateUI(); // 最後再完整更新一次
+                    updateUI();
                 }, 2000);
             } catch (e) {
                 notify("❌ 全部儲存失敗");
@@ -411,32 +469,60 @@
             notify("📢 正在播報前五名成績...");
         }
 
-        function fullReset() {
-            if(!confirm("確定要【重設成績】嗎？這將清除所有分數但保留隊伍名稱。")) return;
-            teams = teams.map(t => ({...t, score: 0, hasRaced: false}));
-            p1Data = null; p2Data = null;
-            document.getElementById('p1-name').innerText = "---";
-            document.getElementById('p2-name').innerText = "---";
-            document.getElementById('p1-score').value = "";
-            document.getElementById('p2-score').value = "";
-            resetTimer();
-            updateUI();
-            exportToCloud();
-            notify("🔄 成績與排名已重設，隊名已保留");
-        }
-
         function drawMatch() {
+            if (isDrawing) return;
             const pool = teams.filter(t => !t.hasRaced);
             if (pool.length === 0) return notify("所有隊伍皆已完賽");
-            p1Data = pool.splice(Math.floor(Math.random()*pool.length), 1)[0];
-            p2Data = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : null;
+
+            isDrawing = true;
+            const btn = document.getElementById('draw-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            const p1Display = document.getElementById('p1-name');
+            const p2Display = document.getElementById('p2-name');
+
+            p1Display.classList.add('slot-machine-anim');
+            p2Display.classList.add('slot-machine-anim');
+
+            speak("對戰組合搜尋中...");
+
+            // 隨機跳動視覺效果
+            let counter = 0;
+            const scrollInterval = setInterval(() => {
+                p1Display.innerText = teams[Math.floor(Math.random() * teams.length)].name;
+                p2Display.innerText = teams[Math.floor(Math.random() * teams.length)].name;
+                counter++;
+                if (counter > 20) {
+                    clearInterval(scrollInterval);
+                    finalizeDraw(pool);
+                }
+            }, 100);
+        }
+
+        function finalizeDraw(pool) {
+            p1Data = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+            p2Data = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
             
-            document.getElementById('p1-name').innerText = p1Data.name;
-            document.getElementById('p2-name').innerText = p2Data ? p2Data.name : "測試選手";
+            const p1Display = document.getElementById('p1-name');
+            const p2Display = document.getElementById('p2-name');
+
+            p1Display.classList.remove('slot-machine-anim');
+            p2Display.classList.remove('slot-machine-anim');
+            
+            p1Display.innerText = p1Data.name;
+            p2Display.innerText = p2Data ? p2Data.name : "測試選手";
+            
             document.getElementById('p1-score').value = "";
             document.getElementById('p2-score').value = "";
             
-            speak(`即將比賽的是：${p1Data.name} 對戰 ${p2Data ? p2Data.name : '測試選手'}`);
+            speak(`匹配完成。即將參賽的是：${p1Data.name} 對戰 ${p2Data ? p2Data.name : '測試選手'}`);
+            
+            const btn = document.getElementById('draw-btn');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50');
+            isDrawing = false;
+            
             resetTimer();
         }
 
