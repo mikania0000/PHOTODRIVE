@@ -98,6 +98,11 @@
             0% { top: 0; }
             100% { top: 100%; }
         }
+
+        /* 捲動條樣式 */
+        #team-list::-webkit-scrollbar { width: 6px; }
+        #team-list::-webkit-scrollbar-track { background: transparent; }
+        #team-list::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.2); border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen overflow-hidden">
@@ -126,7 +131,7 @@
                 <h1 class="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600">
                     資優盃光驅動車大賽
                 </h1>
-                <p class="text-xs text-cyan-500/60 font-bold tech-font uppercase tracking-widest mt-1">Autonomous Terminal v3.2</p>
+                <p class="text-xs text-cyan-500/60 font-bold tech-font uppercase tracking-widest mt-1">Autonomous Terminal v3.4</p>
             </div>
             <div class="flex gap-3">
                 <button onclick="exportToCloud()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 text-xs hover:bg-emerald-600/40 transition-all">
@@ -138,16 +143,22 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-8 space-y-6">
-                <!-- 管理區 -->
-                <section id="setup-panel" class="glass-card rounded-2xl p-4 hidden">
-                    <div class="flex justify-between items-center mb-4 px-2">
-                        <h3 class="text-sm font-bold tech-font text-cyan-400">REGISTRY</h3>
-                        <div class="flex gap-2">
-                            <button onclick="resetToDefaultTeams()" class="bg-slate-700/50 text-slate-300 border border-slate-600 px-3 py-1 rounded-lg hover:bg-slate-600/50 text-xs">重設 10 組</button>
-                            <button onclick="addTeam()" class="bg-cyan-600/20 text-cyan-400 border border-cyan-500/50 px-3 py-1 rounded-lg hover:bg-cyan-600/40 text-xs">＋ 新增</button>
+                <!-- 隊伍管理區：包含新增、刪除、修改 -->
+                <section id="setup-panel" class="glass-card rounded-2xl p-6 hidden">
+                    <div class="flex justify-between items-center mb-6 px-2">
+                        <div>
+                            <h3 class="text-2xl font-black tech-font text-cyan-400">TEAM REGISTRY</h3>
+                            <p class="text-xs text-slate-500 font-bold">新增、刪除或修改參賽者資料</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="resetToDefaultTeams()" class="bg-slate-800 text-slate-300 border border-slate-700 px-5 py-2 rounded-xl hover:bg-slate-700 transition-all text-xs font-bold italic">重設 10 組</button>
+                            <button onclick="addTeam()" class="bg-cyan-600/20 text-cyan-400 border border-cyan-500/50 px-5 py-2 rounded-xl hover:bg-cyan-600/40 transition-all text-sm font-black shadow-[0_0_15px_rgba(6,182,212,0.3)]">＋ 新增隊伍</button>
                         </div>
                     </div>
-                    <div id="team-list" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+                    <!-- 隊伍編輯列表 -->
+                    <div id="team-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[450px] overflow-y-auto pr-2">
+                        <!-- 動態生成：Label + Input + Delete -->
+                    </div>
                 </section>
 
                 <!-- 比賽核心區 -->
@@ -205,7 +216,7 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyKk-6FsyLuGneCqcgnpCoBo1fHPAnXw4ez1gaTEimlkM0zcgfmuysFlOs8O1f7238/exec';
 
         const defaultTeamPreset = Array.from({ length: 10 }, (_, i) => ({
-            id: i + 1,
+            id: Date.now() + i,
             name: `第 ${i + 1} 隊`,
             score: 0,
             hasRaced: false
@@ -269,17 +280,32 @@
                 hasRaced: false
             }));
             updateUI();
+            notify("已重置為預設 10 組隊伍");
         }
 
         function updateUI() {
+            // 更新管理列表 (含 Label + Input + 修改 + 刪除)
             const list = document.getElementById('team-list');
-            list.innerHTML = teams.map(t => `
-                <div class="flex items-center gap-2 p-2 bg-black/40 border border-white/5 rounded-xl group hover:border-cyan-500/30">
-                    <input type="text" value="${t.name}" onchange="editName(${t.id}, this.value)" class="bg-transparent text-[10px] w-full outline-none focus:text-cyan-400 font-bold">
-                    <button onclick="removeTeam(${t.id})" class="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100">×</button>
+            list.innerHTML = teams.map((t, index) => `
+                <div class="flex flex-col gap-3 p-5 bg-white/5 border border-white/10 rounded-2xl group hover:border-cyan-500/50 transition-all shadow-inner relative">
+                    <button onclick="removeTeam(${t.id})" class="absolute top-4 right-4 text-slate-500 hover:text-red-500 transition-colors bg-black/20 hover:bg-red-500/10 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+                    
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_#00f2ff]"></div>
+                        <label class="text-sm font-black text-cyan-500 tech-font uppercase tracking-tighter">Entry ID: ${index + 1}</label>
+                    </div>
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-400 ml-1">隊伍名稱</span>
+                        <input type="text" value="${t.name}" 
+                               onchange="editName(${t.id}, this.value)" 
+                               class="bg-black/60 border border-slate-700 rounded-xl px-5 py-3 w-full outline-none focus:border-cyan-500 text-xl font-black text-white transition-all shadow-lg placeholder-slate-600"
+                               placeholder="請輸入隊名...">
+                    </div>
                 </div>
             `).join('');
 
+            // 更新排行榜
             const board = document.getElementById('leaderboard');
             const sorted = [...teams].sort((a,b) => b.score - a.score);
             
@@ -349,7 +375,7 @@
                 speak("紀錄完成");
             }
             updateUI();
-            notify("成績已暫存");
+            notify("成績已暫存至本地");
         }
 
         function updateCustomTimer(val) {
@@ -391,9 +417,29 @@
 
         function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2000); }
         function toggleManage() { document.getElementById('setup-panel').classList.toggle('hidden'); }
-        function addTeam() { teams.push({id:Date.now(), name:"新隊伍", score:0, hasRaced:false}); updateUI(); }
-        function removeTeam(id) { teams = teams.filter(t => t.id !== id); updateUI(); }
-        function editName(id, val) { teams = teams.map(t => t.id === id ? {...t, name:val} : t); }
+        
+        // 新增隊伍功能
+        function addTeam() { 
+            const newId = Date.now();
+            teams.push({id: newId, name: `第 ${teams.length + 1} 隊`, score: 0, hasRaced: false}); 
+            updateUI(); 
+            notify("已新增一組隊伍");
+        }
+
+        // 刪除隊伍功能
+        function removeTeam(id) { 
+            teams = teams.filter(t => t.id !== id); 
+            updateUI(); 
+            notify("隊伍已移除");
+        }
+
+        // 修改隊伍名稱功能
+        function editName(id, val) { 
+            teams = teams.map(t => t.id === id ? {...t, name: val} : t); 
+            // 抽籤中如果有該隊伍也同步更新顯示
+            if (p1Data && p1Data.id === id) document.getElementById('p1-name').innerText = val;
+            if (p2Data && p2Data.id === id) document.getElementById('p2-name').innerText = val;
+        }
     </script>
 </body>
 </html>
