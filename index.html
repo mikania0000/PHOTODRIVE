@@ -194,9 +194,14 @@
             <div class="lg:col-span-4">
                 <section class="glass-card rounded-2xl p-6 h-[calc(100vh-160px)] shadow-2xl flex flex-col relative">
                     <div id="sort-warning">正在重新計算排名...</div>
-                    <h3 class="text-2xl font-black mb-4 flex items-center gap-3">
-                        <span class="text-yellow-500">🏆</span> 榮譽排行榜
-                    </h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-black flex items-center gap-3">
+                            <span class="text-yellow-500">🏆</span> 榮譽排行榜
+                        </h3>
+                        <button onclick="announceTopFive()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/50 text-indigo-400 text-xs font-bold hover:bg-indigo-600/40 transition-all">
+                            📢 播報前五名
+                        </button>
+                    </div>
                     <div id="leaderboard" class="space-y-3 overflow-y-auto flex-1 pr-1"></div>
                 </section>
             </div>
@@ -307,14 +312,39 @@
                 updateUI();
                 announceTopThree();
                 exportToCloud();
-            }, 3000); // 調整為 3 秒
+            }, 3000); 
         }
 
         function announceTopThree() {
             const sorted = [...teams].sort((a,b) => b.score - a.score);
             let msg = "目前的排行榜首位是：";
-            if (sorted[0] && sorted[0].score > 0) msg += `${sorted[0].name}，成績 ${sorted[0].score} 公分。`;
+            if (sorted[0] && sorted[0].score > 0) {
+                msg += `${sorted[0].name}，成績 ${sorted[0].score} 公分。`;
+                speak(msg);
+            }
+        }
+
+        // 播報前五名邏輯
+        function announceTopFive() {
+            const sorted = [...teams].filter(t => t.score > 0).sort((a,b) => b.score - a.score);
+            if (sorted.length === 0) {
+                speak("目前尚無比賽成績紀錄。");
+                return;
+            }
+            
+            let msg = "現在播報大賽前五名狀況：";
+            const topN = sorted.slice(0, 5);
+            
+            topN.forEach((t, i) => {
+                msg += `第 ${i + 1} 名，${t.name}，成績 ${t.score} 公分。`;
+            });
+            
+            if (sorted.length > 0) {
+                msg += "恭喜以上隊伍，請繼續加油！";
+            }
+            
             speak(msg);
+            notify("📢 正在播報前五名成績...");
         }
 
         function saveTeamName(id) {
