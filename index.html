@@ -48,7 +48,6 @@
             transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
         }
 
-        /* 滾動動畫效果優化 */
         .slot-machine {
             height: 5.5rem; 
             overflow: hidden;
@@ -99,7 +98,6 @@
             100% { top: 100%; }
         }
 
-        /* 隊名平衡大小 */
         .team-name-display {
             font-size: 3.5rem; 
             font-weight: 800;
@@ -107,7 +105,6 @@
             line-height: 1.2;
         }
 
-        /* 自定義時間按鈕樣式 */
         .time-btn {
             @apply px-3 py-1 rounded bg-slate-800 border border-slate-700 text-xs font-bold hover:bg-cyan-900/40 hover:border-cyan-500/50 transition-all;
         }
@@ -123,6 +120,11 @@
             20%, 80% { transform: translate3d(2px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
@@ -156,9 +158,14 @@
                             <span class="w-2 h-6 bg-cyan-500 rounded-full mr-3"></span>
                             隊伍註冊系統
                         </h2>
-                        <button onclick="addTeam()" class="bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 px-4 py-1 rounded-lg border border-cyan-500/30 text-sm">
-                            + 新增隊伍
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="resetAllRaces()" class="bg-red-900/20 hover:bg-red-900/40 text-red-400 px-4 py-1 rounded-lg border border-red-500/30 text-sm">
+                                重置所有賽程
+                            </button>
+                            <button onclick="addTeam()" class="bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 px-4 py-1 rounded-lg border border-cyan-500/30 text-sm">
+                                + 新增隊伍
+                            </button>
+                        </div>
                     </div>
                     <div id="team-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
                         <!-- 動態生成 -->
@@ -220,7 +227,6 @@
                             </div>
                         </div>
 
-                        <!-- 時間設定區域 -->
                         <div class="flex items-center gap-2 mb-6 bg-black/30 p-2 rounded-xl border border-white/5">
                             <button onclick="setBaseTime(30)" class="time-btn" id="t-30">30s</button>
                             <button onclick="setBaseTime(60)" class="time-btn active" id="t-60">60s</button>
@@ -255,6 +261,7 @@
                             <span class="w-2 h-6 bg-emerald-500 rounded-full mr-3"></span>
                             即時排行榜
                         </h2>
+                        <span id="match-progress" class="text-[10px] text-slate-500 tech-font">0/0 RACED</span>
                     </div>
 
                     <div class="space-y-4" id="leaderboard-list">
@@ -266,8 +273,21 @@
                     </div>
                 </section>
             </div>
-
         </main>
+    </div>
+
+    <!-- 自定義對話框 (用於修改成績) -->
+    <div id="edit-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeEditModal()"></div>
+        <div class="glass-card relative z-10 w-80 p-6 rounded-2xl border border-cyan-500/50 shadow-[0_0_50px_rgba(6,182,212,0.3)]">
+            <h3 class="text-lg font-bold mb-4 text-cyan-400 tech-font uppercase">修正成績</h3>
+            <p id="edit-team-name" class="text-sm text-slate-300 mb-2 font-bold">隊伍名稱</p>
+            <input type="number" id="edit-score-input" class="w-full bg-black/60 border border-slate-700 rounded-lg py-3 px-4 text-center text-xl text-emerald-400 font-mono focus:border-cyan-500 focus:outline-none mb-6">
+            <div class="flex gap-3">
+                <button onclick="closeEditModal()" class="flex-1 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm hover:bg-slate-700">取消</button>
+                <button onclick="confirmEditScore()" class="flex-1 py-2 rounded-lg bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-500">確認修改</button>
+            </div>
+        </div>
     </div>
 
     <!-- 通知元件 -->
@@ -276,13 +296,25 @@
     </div>
 
     <script>
-        // 音效管理器
+        // 音效與語音管理器
         const SFX = {
             audioCtx: null,
+            synth: window.speechSynthesis,
             init() {
                 if (!this.audioCtx) {
                     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 }
+            },
+            speak(text) {
+                // 停止之前的語音，確保新的能播
+                if (this.synth.speaking) {
+                    this.synth.cancel();
+                }
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 1.1; // 稍微快一點點，更有緊張感
+                utterance.pitch = 1.0;
+                this.synth.speak(utterance);
             },
             play(type) {
                 this.init();
@@ -291,9 +323,7 @@
                 const gain = ctx.createGain();
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-
                 const now = ctx.currentTime;
-
                 switch(type) {
                     case 'click':
                         osc.type = 'sine';
@@ -326,7 +356,6 @@
                         osc.start(); osc.stop(now + 0.08);
                         break;
                     case 'alarm':
-                        // 雙頻報警聲
                         const osc2 = ctx.createOscillator();
                         osc2.type = 'sawtooth';
                         osc2.frequency.setValueAtTime(200, now);
@@ -352,15 +381,16 @@
 
         // 狀態管理
         let teams = [
-            { id: 1, name: "光子旋風", score: 0 }, { id: 2, name: "雷射之眼", score: 0 },
-            { id: 3, name: "閃電騎士", score: 0 }, { id: 4, name: "太陽能翼", score: 0 },
-            { id: 5, name: "影之驅動", score: 0 }, { id: 6, name: "極光戰機", score: 0 },
-            { id: 7, name: "真空躍遷", score: 0 }, { id: 8, name: "紅外線殺手", score: 0 }
+            { id: 1, name: "光子旋風", score: 0, hasRaced: false }, { id: 2, name: "雷射之眼", score: 0, hasRaced: false },
+            { id: 3, name: "閃電騎士", score: 0, hasRaced: false }, { id: 4, name: "太陽能翼", score: 0, hasRaced: false },
+            { id: 5, name: "影之驅動", score: 0, hasRaced: false }, { id: 6, name: "極光戰機", score: 0, hasRaced: false },
+            { id: 7, name: "真空躍遷", score: 0, hasRaced: false }, { id: 8, name: "紅外線殺手", score: 0, hasRaced: false }
         ];
 
         let currentP1 = null; let currentP2 = null;
         let baseSeconds = 60; let timerSeconds = 60;
         let timerRunning = false; let timerInterval = null; let isDrawing = false;
+        let editingTeamId = null;
 
         window.onload = () => { renderTeamInputs(); updateLeaderboard(); };
 
@@ -390,15 +420,23 @@
         function addTeam() {
             SFX.play('click');
             const newId = Date.now();
-            teams.push({ id: newId, name: `新隊伍 ${teams.length + 1}`, score: 0 });
+            teams.push({ id: newId, name: `新隊伍 ${teams.length + 1}`, score: 0, hasRaced: false });
             renderTeamInputs();
         }
 
         function removeTeam(id) {
             SFX.play('click');
-            if (teams.length <= 2) return notify("至少需保留 2 個隊伍");
+            if (teams.length <= 1) return notify("至少需保留 1 個隊伍");
             teams = teams.filter(t => t.id !== id);
             renderTeamInputs();
+        }
+
+        function resetAllRaces() {
+            if (!confirm("確定要重置所有成績與賽程標記嗎？")) return;
+            teams = teams.map(t => ({ ...t, score: 0, hasRaced: false }));
+            updateLeaderboard();
+            renderTeamInputs();
+            notify("所有賽程已重置");
         }
 
         function toggleManageMode() {
@@ -432,13 +470,16 @@
 
         async function drawMatch() {
             if (timerRunning || isDrawing) return;
+            const unRacedTeams = teams.filter(t => !t.hasRaced);
+            if (unRacedTeams.length === 0) return notify("所有隊伍皆已完成比賽！");
+
             isDrawing = true; resetTimer();
             const p1Slot = document.getElementById('p1-slot');
             const p2Slot = document.getElementById('p2-slot');
             
-            const available = [...teams];
-            const p1 = available.splice(Math.floor(Math.random()*available.length), 1)[0];
-            const p2 = available[Math.floor(Math.random()*available.length)];
+            const pool = [...unRacedTeams];
+            const p1 = pool.splice(Math.floor(Math.random()*pool.length), 1)[0];
+            const p2 = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : { id: -1, name: "無 (單隊出賽)" };
 
             let count = 0;
             const interval = setInterval(() => {
@@ -448,9 +489,11 @@
                 p1Slot.classList.add('shuffling'); p2Slot.classList.add('shuffling');
                 if (++count > 20) {
                     clearInterval(interval);
-                    p1Slot.innerText = p1.name; p2Slot.innerText = p2.name;
+                    p1Slot.innerText = p1.name; 
+                    p2Slot.innerText = p2.name;
                     p1Slot.classList.remove('shuffling'); p2Slot.classList.remove('shuffling');
-                    currentP1 = p1; currentP2 = p2;
+                    currentP1 = p1; 
+                    currentP2 = (p2.id === -1) ? null : p2;
                     isDrawing = false;
                     SFX.play('save');
                 }
@@ -463,24 +506,32 @@
         }
 
         function startTimer() {
+            // 如果是剛開始（從基礎時間啟動），播報比賽開始
+            if (timerSeconds === baseSeconds) {
+                SFX.speak("比賽開始");
+            }
+            
             timerRunning = true;
             document.getElementById('timer-control-btn').innerText = "暫停";
             timerInterval = setInterval(() => {
                 timerSeconds--;
                 
-                // 倒數音效邏輯
-                if (timerSeconds > 0) {
-                    if (timerSeconds <= 3) {
-                        SFX.play('warning'); // 最後三秒重音
-                    } else if (timerSeconds <= 10) {
-                        SFX.play('tick'); // 最後十秒滴答
-                    }
+                // 處理倒數與音效
+                if (timerSeconds === 10) {
+                    SFX.speak("最後十秒倒數");
+                } else if (timerSeconds < 10 && timerSeconds > 0) {
+                    SFX.play('tick');
+                    SFX.speak(timerSeconds.toString());
+                } else if (timerSeconds === 0) {
+                    handleTimerEnd();
+                } else if (timerSeconds > 10) {
+                    // 一般滴答聲
+                    if (timerSeconds % 10 === 0) SFX.play('tick');
                 }
 
                 if (timerSeconds <= 0) { 
                     stopTimer(); 
                     timerSeconds = 0;
-                    handleTimerEnd();
                 }
                 updateTimerDisplay();
             }, 1000);
@@ -488,12 +539,12 @@
 
         function handleTimerEnd() {
             SFX.play('alarm');
+            SFX.speak("比賽結束，請停止操作");
             notify("時間到！");
             document.body.classList.add('timer-warning');
             document.getElementById('timer-container').classList.add('shake');
             document.getElementById('timer-bar').classList.replace('text-cyan-500', 'text-red-500');
             document.getElementById('seconds-text').classList.add('text-red-500', 'glow-text-red');
-            
             setTimeout(() => {
                 document.getElementById('timer-container').classList.remove('shake');
             }, 1000);
@@ -514,8 +565,6 @@
         function updateTimerDisplay() {
             document.getElementById('seconds-text').innerText = timerSeconds;
             document.getElementById('timer-bar').style.strokeDashoffset = 465 - (timerSeconds / baseSeconds) * 465;
-            
-            // 最後 10 秒變紅預警
             if (timerSeconds <= 10 && timerSeconds > 0) {
                 document.getElementById('timer-bar').style.stroke = 'var(--neon-red)';
                 document.body.classList.add('timer-warning');
@@ -530,29 +579,86 @@
             SFX.play('save');
             const s1 = parseFloat(document.getElementById('p1-score-input').value) || 0;
             const s2 = parseFloat(document.getElementById('p2-score-input').value) || 0;
+            
             teams = teams.map(t => {
-                if (t.id === currentP1.id) t.score = Math.max(t.score, s1);
-                if (t.id === currentP2.id) t.score = Math.max(t.score, s2);
+                if (t.id === currentP1.id) {
+                    t.score = Math.max(t.score, s1);
+                    t.hasRaced = true;
+                }
+                if (currentP2 && t.id === currentP2.id) {
+                    t.score = Math.max(t.score, s2);
+                    t.hasRaced = true;
+                }
                 return t;
             });
+            
             updateLeaderboard(); notify("成績已儲存"); resetTimer();
             document.getElementById('p1-score-input').value = '';
             document.getElementById('p2-score-input').value = '';
+            currentP1 = null; currentP2 = null;
+            document.getElementById('p1-slot').innerText = "---";
+            document.getElementById('p2-slot').innerText = "---";
         }
 
         function updateLeaderboard() {
             const list = document.getElementById('leaderboard-list');
             const sorted = [...teams].sort((a,b) => b.score - a.score);
-            document.getElementById('no-data').classList.toggle('hidden', sorted.some(t => t.score > 0));
+            const racedCount = teams.filter(t => t.hasRaced).length;
+            
+            document.getElementById('match-progress').innerText = `${racedCount}/${teams.length} RACED`;
+            document.getElementById('no-data').classList.toggle('hidden', true);
+            
             list.innerHTML = sorted.map((t, i) => `
-                <div class="rank-row flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5">
+                <div onclick="openEditModal(${t.id})" class="rank-row flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-all group">
                     <div class="flex items-center gap-4">
                         <span class="tech-font font-black text-xl w-6 ${i<3?'text-yellow-400':'text-slate-500'}">${i+1}</span>
-                        <div class="font-bold text-slate-100">${t.name}</div>
+                        <div>
+                            <div class="font-bold text-slate-100 flex items-center gap-2">
+                                ${t.name}
+                                ${t.hasRaced ? 
+                                    '<span class="text-[8px] bg-emerald-500/20 text-emerald-400 px-1 rounded border border-emerald-500/30 uppercase">Raced</span>' : 
+                                    '<span class="text-[8px] bg-slate-700 text-slate-400 px-1 rounded uppercase">Pending</span>'}
+                            </div>
+                        </div>
                     </div>
-                    <div class="tech-font font-bold text-emerald-400 text-xl">${t.score} <span class="text-[9px] text-slate-500">CM</span></div>
+                    <div class="text-right">
+                        <div class="tech-font font-bold text-emerald-400 text-xl group-hover:text-cyan-400 transition-colors">
+                            ${t.score} <span class="text-[9px] text-slate-500">CM</span>
+                        </div>
+                        <div class="text-[8px] text-slate-600 tech-font opacity-0 group-hover:opacity-100 uppercase">Click to Edit</div>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        function openEditModal(teamId) {
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+            editingTeamId = teamId;
+            document.getElementById('edit-team-name').innerText = team.name;
+            document.getElementById('edit-score-input').value = team.score;
+            document.getElementById('edit-modal').classList.remove('hidden');
+            SFX.play('click');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            editingTeamId = null;
+        }
+
+        function confirmEditScore() {
+            const newVal = parseFloat(document.getElementById('edit-score-input').value) || 0;
+            teams = teams.map(t => {
+                if (t.id === editingTeamId) {
+                    t.score = newVal;
+                    t.hasRaced = true; 
+                }
+                return t;
+            });
+            updateLeaderboard();
+            closeEditModal();
+            SFX.play('save');
+            notify("成績修正成功");
         }
 
         function notify(msg) {
