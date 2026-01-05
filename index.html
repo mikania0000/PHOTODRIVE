@@ -12,9 +12,8 @@
         :root {
             --neon-blue: #00f2ff;
             --neon-purple: #bc13fe;
+            --neon-danger: #ff4757;
             --gold: #fbbf24;
-            --silver: #94a3b8;
-            --bronze: #b45309;
         }
 
         body {
@@ -28,13 +27,16 @@
         .tech-font { font-family: 'Orbitron', sans-serif; }
         .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
-        /* 隊名顯示字體 */
         .team-display-name {
-            font-size: 4.5rem; 
+            font-size: 3rem; 
             font-weight: 900;
-            letter-spacing: -0.05em;
+            letter-spacing: -0.02em;
             text-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .neon-text-blue {
@@ -47,6 +49,17 @@
             color: #fff;
             text-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple);
             animation: neon-pulse-purple 2s infinite alternate;
+        }
+
+        .timer-danger {
+            color: var(--neon-danger) !important;
+            text-shadow: 0 0 15px var(--neon-danger), 0 0 30px var(--neon-danger) !important;
+            animation: danger-beat 0.5s infinite alternate !important;
+        }
+
+        @keyframes danger-beat {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
         }
 
         @keyframes neon-pulse-blue {
@@ -62,18 +75,11 @@
         .rank-gold { 
             background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important; 
             border-left: 5px solid var(--gold) !important; 
-            animation: gold-glow 3s infinite;
-        }
-
-        @keyframes gold-glow { 
-            0%, 100% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.1); } 
-            50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); } 
         }
 
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* 計時器輸入框 */
         #timer-input {
             background: transparent;
             border: none;
@@ -81,11 +87,7 @@
             width: 220px;
             outline: none;
             cursor: pointer;
-            transition: color 0.3s, transform 0.2s;
-        }
-        #timer-input:focus { 
-            color: var(--neon-blue); 
-            transform: scale(1.05);
+            transition: all 0.3s;
         }
 
         .scanline {
@@ -102,10 +104,6 @@
             100% { top: 100%; }
         }
 
-        #team-list::-webkit-scrollbar, #leaderboard::-webkit-scrollbar { width: 6px; }
-        #team-list::-webkit-scrollbar-track, #leaderboard::-webkit-scrollbar-track { background: transparent; }
-        #team-list::-webkit-scrollbar-thumb, #leaderboard::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.2); border-radius: 10px; }
-
         .score-input-direct {
             background: transparent;
             border: 1px solid transparent;
@@ -115,16 +113,10 @@
             font-weight: 900;
             color: #10b981;
             outline: none;
-            transition: all 0.2s;
-        }
-        .score-input-direct:focus {
-            border-bottom-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
         }
 
-        /* 標題動畫加強 */
         .main-title {
-            font-size: 3.5rem; /* 更大一點 */
+            font-size: 2.5rem;
             line-height: 1;
             font-weight: 900;
             background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 50%, #6366f1 100%);
@@ -140,7 +132,6 @@
 </head>
 <body class="min-h-screen overflow-hidden">
 
-    <!-- 初始模態框 -->
     <div id="init-modal" class="fixed inset-0 z-[200] flex items-center justify-center">
         <div class="absolute inset-0 bg-black/95 backdrop-blur-xl"></div>
         <div class="glass-card relative z-10 max-w-lg w-full p-10 rounded-3xl text-center border-cyan-500/30 shadow-2xl">
@@ -161,12 +152,10 @@
     <div class="max-w-7xl mx-auto px-4 pt-6">
         <header class="flex justify-between items-end mb-8">
             <div class="flex flex-col">
-                <h1 class="main-title tracking-tighter">
-                    資優盃光驅動車大賽
-                </h1>
+                <h1 class="main-title tracking-tighter">資優盃光驅動車大賽</h1>
                 <div class="flex items-center gap-3 mt-2">
                     <span class="h-[1px] w-12 bg-cyan-500/50"></span>
-                    <p class="text-xs text-cyan-500/80 font-bold tech-font uppercase tracking-[0.3em]">Autonomous Racing Terminal v3.8</p>
+                    <p class="text-xs text-cyan-500/80 font-bold tech-font uppercase tracking-[0.3em]">Autonomous Racing Terminal v4.1</p>
                 </div>
             </div>
             <div class="flex gap-3 mb-2">
@@ -178,14 +167,12 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- 左側比賽區域 -->
             <div class="lg:col-span-8 space-y-6">
-                <!-- 隊伍管理面板 (隱藏) -->
                 <section id="setup-panel" class="glass-card rounded-2xl p-6 hidden">
                     <div class="flex justify-between items-center mb-6 px-2">
                         <div>
                             <h3 class="text-2xl font-black tech-font text-cyan-400">TEAM REGISTRY</h3>
-                            <p class="text-xs text-slate-500 font-bold">新增、刪除或修改參賽者資料</p>
+                            <p class="text-xs text-slate-500 font-bold">參賽隊伍管理</p>
                         </div>
                         <div class="flex gap-3">
                             <button onclick="resetToDefaultTeams()" class="bg-slate-800 text-slate-300 border border-slate-700 px-5 py-2 rounded-xl hover:bg-slate-700 transition-all text-xs font-bold italic">重設 10 組</button>
@@ -195,25 +182,21 @@
                     <div id="team-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[450px] overflow-y-auto pr-2"></div>
                 </section>
 
-                <!-- 主要對戰區域 -->
                 <section class="glass-card rounded-[2rem] p-6 border-l-[8px] border-cyan-500 shadow-2xl relative overflow-hidden">
                     <div class="scanline"></div>
                     <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-                        <!-- 選手 A -->
                         <div class="w-full md:w-[38%] p-6 rounded-2xl bg-slate-900/80 border border-white/5 text-center shadow-inner">
                             <div class="text-[10px] text-cyan-500 tech-font mb-2 uppercase tracking-widest">Pilot Alpha</div>
                             <div id="p1-name" class="team-display-name neon-text-blue h-28 flex items-center justify-center">---</div>
                             <input type="number" id="p1-score" placeholder="距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-xl py-4 text-center text-3xl text-cyan-400 font-mono focus:border-cyan-500 outline-none transition-all">
                         </div>
 
-                        <!-- 計時器 -->
                         <div class="flex flex-col items-center justify-center p-2 min-w-[200px]">
                             <div class="text-[10px] text-slate-500 tech-font mb-1 uppercase tracking-widest">Main Timer</div>
                             <input type="number" id="timer-input" value="60" class="text-8xl font-black tech-font text-white bg-transparent outline-none drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" onchange="updateCustomTimer(this.value)">
-                            <div class="text-3xl font-black tech-font text-slate-700 italic mt-0 tracking-tighter">VERSUS</div>
+                            <div id="versus-label" class="text-3xl font-black tech-font text-slate-700 italic mt-0 tracking-tighter">VERSUS</div>
                         </div>
 
-                        <!-- 選手 B -->
                         <div class="w-full md:w-[38%] p-6 rounded-2xl bg-slate-900/80 border border-white/5 text-center shadow-inner">
                             <div class="text-[10px] text-purple-500 tech-font mb-2 uppercase tracking-widest">Pilot Bravo</div>
                             <div id="p2-name" class="team-display-name neon-text-purple h-28 flex items-center justify-center">---</div>
@@ -221,7 +204,6 @@
                         </div>
                     </div>
 
-                    <!-- 按鈕控制區 -->
                     <div class="flex flex-wrap justify-center gap-4">
                         <button onclick="drawMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-xl font-black transition-all shadow-lg text-lg transform hover:scale-105">隨機抽籤</button>
                         <button id="timer-btn" onclick="toggleTimer()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-10 py-4 rounded-xl font-black transition-all shadow-lg text-lg transform hover:scale-105">開始計時</button>
@@ -231,12 +213,10 @@
                 </section>
             </div>
 
-            <!-- 右側排行榜區 -->
             <div class="lg:col-span-4">
                 <section class="glass-card rounded-2xl p-6 h-[calc(100vh-180px)] shadow-2xl relative overflow-hidden flex flex-col">
                     <h3 class="text-2xl font-black mb-6 flex items-center gap-3">
-                        <span class="w-2 h-7 bg-cyan-500 rounded-full shadow-[0_0_15px_#00f2ff]"></span>
-                        競賽排名
+                        <span class="w-2 h-7 bg-cyan-500 rounded-full"></span>競賽排名
                     </h3>
                     <div id="leaderboard" class="space-y-3 overflow-y-auto flex-1 pr-2"></div>
                 </section>
@@ -244,24 +224,16 @@
         </div>
     </div>
 
-    <!-- 提示框 -->
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-cyan-500/50 text-cyan-200 px-10 py-4 rounded-full opacity-0 transition-all pointer-events-none text-sm font-bold shadow-2xl z-[300] backdrop-blur-md"></div>
 
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyKk-6FsyLuGneCqcgnpCoBo1fHPAnXw4ez1gaTEimlkM0zcgfmuysFlOs8O1f7238/exec';
-
-        const defaultTeamPreset = Array.from({ length: 10 }, (_, i) => ({
-            id: Date.now() + i,
-            name: `第 ${i + 1} 隊`,
-            score: 0,
-            hasRaced: false
-        }));
-
-        let teams = [...defaultTeamPreset];
+        let teams = Array.from({ length: 10 }, (_, i) => ({ id: Date.now() + i, name: `第 ${i + 1} 隊`, score: 0, hasRaced: false }));
         let p1Data = null, p2Data = null, defaultSeconds = 60, timerVal = 60, isRunning = false, interval = null;
 
         function speak(text) {
             if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-TW';
                 utterance.rate = 1.1;
@@ -275,30 +247,20 @@
             icon.classList.add('spin');
             text.innerText = "同步中...";
             try {
-                await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(teams)
-                });
+                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(teams) });
                 notify("✅ 已更新雲端");
-            } catch (e) {
-                notify("❌ 同步失敗");
-            } finally {
+            } catch (e) { notify("❌ 同步失敗"); } finally {
                 icon.classList.remove('spin');
                 text.innerText = "同步雲端";
             }
         }
 
         async function importFromCloud() {
-            notify("正在自雲端下載資料...");
             try {
                 const res = await fetch(scriptURL);
                 const data = await res.json();
                 if (data && data.length > 0) {
-                    teams = data;
-                    updateUI();
-                    closeInitModal();
+                    teams = data; updateUI(); closeInitModal();
                     notify("✅ 資料同步完成");
                     speak("系統資料同步完成");
                 }
@@ -306,64 +268,36 @@
         }
 
         function closeInitModal() { document.getElementById('init-modal').style.display = 'none'; updateUI(); }
-
-        function resetToDefaultTeams() {
-            teams = Array.from({ length: 10 }, (_, i) => ({
-                id: Date.now() + i,
-                name: `第 ${i + 1} 隊`,
-                score: 0,
-                hasRaced: false
-            }));
-            updateUI();
-            notify("已重置為預設 10 組隊伍");
-        }
+        function toggleManage() { document.getElementById('setup-panel').classList.toggle('hidden'); }
+        function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2000); }
 
         function updateUI() {
             const list = document.getElementById('team-list');
             list.innerHTML = teams.map((t, index) => `
-                <div class="flex flex-col gap-3 p-5 bg-white/5 border border-white/10 rounded-2xl group hover:border-cyan-500/50 transition-all shadow-inner relative">
-                    <button onclick="removeTeam(${t.id})" class="absolute top-4 right-4 text-slate-500 hover:text-red-500 transition-colors bg-black/20 hover:bg-red-500/10 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
-                    <div class="flex items-center gap-2">
+                <div class="flex flex-col gap-2 p-5 bg-white/5 border border-white/10 rounded-2xl group hover:border-cyan-500/50 transition-all shadow-inner relative">
+                    <button onclick="removeTeam(${t.id})" class="absolute top-4 right-4 text-slate-500 hover:text-red-500 transition-colors w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+                    <div class="flex items-center gap-2 mb-1">
                         <div class="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_#00f2ff]"></div>
-                        <label class="text-sm font-black text-cyan-500 tech-font uppercase tracking-tighter">Entry ID: ${index + 1}</label>
+                        <label class="text-sm font-black text-cyan-500 tech-font uppercase">第 ${index + 1} 隊</label>
                     </div>
-                    <div class="space-y-1">
-                        <span class="text-xs font-bold text-slate-400 ml-1">隊伍名稱</span>
-                        <input type="text" value="${t.name}" 
-                               onchange="editName(${t.id}, this.value)" 
-                               class="bg-black/60 border border-slate-700 rounded-xl px-5 py-3 w-full outline-none focus:border-cyan-500 text-xl font-black text-white transition-all shadow-lg placeholder-slate-600"
-                               placeholder="請輸入隊名...">
-                    </div>
+                    <input type="text" value="${t.name}" onchange="editName(${t.id}, this.value)" class="bg-black/60 border border-slate-700 rounded-xl px-5 py-3 w-full outline-none focus:border-cyan-500 text-xl font-black text-white placeholder-slate-600">
                 </div>
             `).join('');
 
             const board = document.getElementById('leaderboard');
             const sorted = [...teams].sort((a,b) => b.score - a.score);
-            board.innerHTML = sorted.map((t, i) => {
-                let rankStyle = "";
-                let medal = "";
-                if (t.score > 0) {
-                    if (i === 0) { rankStyle = "rank-gold"; medal = "🥇 "; }
-                    else if (i === 1) medal = "🥈 ";
-                    else if (i === 2) medal = "🥉 ";
-                }
-                return `
-                    <div class="flex justify-between items-center p-4 rounded-xl border border-white/5 bg-white/5 ${rankStyle}">
-                        <div class="flex items-center gap-3">
-                            <span class="tech-font font-black text-slate-500 text-sm">${i+1}</span>
-                            <span class="font-bold text-base">${medal}${t.name}</span>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <div class="flex items-center gap-1">
-                                <input type="number" value="${t.score}" 
-                                       onchange="editScore(${t.id}, this.value)"
-                                       class="score-input-direct text-xl">
-                                <span class="text-[10px] text-slate-500 font-bold uppercase">cm</span>
-                            </div>
-                        </div>
+            board.innerHTML = sorted.map((t, i) => `
+                <div class="flex justify-between items-center p-4 rounded-xl border border-white/5 bg-white/5 ${t.score > 0 && i === 0 ? 'rank-gold' : ''}">
+                    <div class="flex items-center gap-3">
+                        <span class="tech-font font-black text-slate-500 text-sm">${i+1}</span>
+                        <span class="font-bold text-base">${t.score > 0 && i === 0 ? '🥇 ' : ''}${t.name}</span>
                     </div>
-                `;
-            }).join('');
+                    <div class="flex items-center gap-1">
+                        <input type="number" value="${t.score}" onchange="editScore(${t.id}, this.value)" class="score-input-direct text-xl">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">cm</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function drawMatch() {
@@ -373,16 +307,8 @@
             p2Data = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : null;
             document.getElementById('p1-score').value = '';
             document.getElementById('p2-score').value = '';
-            const p1El = document.getElementById('p1-name');
-            const p2El = document.getElementById('p2-name');
-            p1El.style.opacity = "0";
-            p2El.style.opacity = "0";
-            setTimeout(() => {
-                p1El.innerText = p1Data.name;
-                p2El.innerText = p2Data ? p2Data.name : "測試選手";
-                p1El.style.opacity = "1";
-                p2El.style.opacity = "1";
-            }, 100);
+            document.getElementById('p1-name').innerText = p1Data.name;
+            document.getElementById('p2-name').innerText = p2Data ? p2Data.name : "測試選手";
             speak(`由 ${p1Data.name} 對戰 ${p2Data ? p2Data.name : '測試選手'}`);
             resetTimer();
         }
@@ -396,12 +322,10 @@
                 if (p2Data && t.id === p2Data.id) { t.score = s2; t.hasRaced = true; }
                 return t;
             });
-            if (s1 > 0 || s2 > 0) {
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-                speak("紀錄完成");
-            }
+            if (s1 > 0 || s2 > 0) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             updateUI();
-            notify("成績已暫存至本地");
+            notify("紀錄完成");
+            speak("成績紀錄完成");
         }
 
         function updateCustomTimer(val) {
@@ -413,12 +337,15 @@
             clearInterval(interval);
             isRunning = false;
             timerVal = defaultSeconds;
-            document.getElementById('timer-input').value = timerVal;
+            const timerInput = document.getElementById('timer-input');
+            timerInput.value = timerVal;
+            timerInput.classList.remove('timer-danger');
             document.getElementById('timer-btn').innerText = "開始計時";
         }
 
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
+            const timerInput = document.getElementById('timer-input');
             if (isRunning) { 
                 clearInterval(interval); 
                 isRunning = false; 
@@ -427,11 +354,16 @@
             } else {
                 isRunning = true;
                 btn.innerText = "暫停";
-                speak("計時開始，預備，跑！");
+                speak("比賽開始！");
                 interval = setInterval(() => {
                     timerVal--;
-                    document.getElementById('timer-input').value = timerVal;
-                    if (timerVal <= 3 && timerVal > 0) speak(timerVal.toString());
+                    timerInput.value = timerVal;
+                    
+                    if (timerVal <= 10 && timerVal > 0) {
+                        timerInput.classList.add('timer-danger');
+                        speak(timerVal.toString());
+                    }
+
                     if (timerVal <= 0) { 
                         clearInterval(interval); 
                         isRunning = false; 
@@ -443,33 +375,16 @@
             }
         }
 
-        function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2000); }
-        function toggleManage() { document.getElementById('setup-panel').classList.toggle('hidden'); }
-        
-        function addTeam() { 
-            const newId = Date.now();
-            teams.push({id: newId, name: `第 ${teams.length + 1} 隊`, score: 0, hasRaced: false}); 
-            updateUI(); 
-            notify("已新增一組隊伍");
+        function resetToDefaultTeams() {
+            teams = Array.from({ length: 10 }, (_, i) => ({ id: Date.now() + i, name: `第 ${i + 1} 隊`, score: 0, hasRaced: false }));
+            updateUI(); notify("已重置隊伍");
         }
-        
-        function removeTeam(id) { 
-            teams = teams.filter(t => t.id !== id); 
-            updateUI(); 
-            notify("隊伍已移除");
-        }
-        
-        function editName(id, val) { 
-            teams = teams.map(t => t.id === id ? {...t, name: val} : t); 
-            if (p1Data && p1Data.id === id) document.getElementById('p1-name').innerText = val;
-            if (p2Data && p2Data.id === id) document.getElementById('p2-name').innerText = val;
-        }
-
-        function editScore(id, val) {
-            const newScore = parseFloat(val) || 0;
-            teams = teams.map(t => t.id === id ? {...t, score: newScore, hasRaced: true} : t);
+        function addTeam() { teams.push({id: Date.now(), name: `新隊伍`, score: 0, hasRaced: false}); updateUI(); }
+        function removeTeam(id) { teams = teams.filter(t => t.id !== id); updateUI(); }
+        function editName(id, val) { teams = teams.map(t => t.id === id ? {...t, name: val} : t); }
+        function editScore(id, val) { 
+            teams = teams.map(t => t.id === id ? {...t, score: parseFloat(val)||0, hasRaced: true} : t); 
             updateUI();
-            notify("成績已更新");
         }
     </script>
 </body>
