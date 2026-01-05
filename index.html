@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>資優盃光驅動車大賽 - 雲端管理系統</title>
+    <title>資優盃光驅動車大賽 - 科技雲端版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -11,10 +11,6 @@
         
         :root {
             --neon-blue: #00f2ff;
-            --neon-green: #39ff14;
-            --neon-purple: #bc13fe;
-            --neon-pink: #ff00ff;
-            --neon-red: #ff3131;
             --gold: #fbbf24;
             --silver: #94a3b8;
             --bronze: #b45309;
@@ -29,341 +25,254 @@
         }
 
         .tech-font { font-family: 'Orbitron', sans-serif; }
-        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .neon-border-blue { border-left: 4px solid var(--neon-blue); box-shadow: -5px 0 15px rgba(0, 242, 255, 0.2); }
+        .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
-        /* 獎牌特效 */
-        .rank-gold { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important; border-left: 4px solid var(--gold) !important; animation: gold-pulse 3s infinite; }
-        .rank-silver { border-left: 4px solid var(--silver) !important; }
-        .rank-bronze { border-left: 4px solid var(--bronze) !important; }
-        @keyframes gold-pulse { 0%, 100% { box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1); } 50% { box-shadow: inset 0 0 40px rgba(251, 191, 36, 0.25); } }
+        /* 重新找回的獎牌特效 */
+        .rank-gold { 
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important; 
+            border-left: 4px solid var(--gold) !important; 
+            animation: gold-pulse 3s infinite; 
+        }
+        .rank-silver { 
+            border-left: 4px solid var(--silver) !important; 
+            background: rgba(148, 163, 184, 0.05) !important;
+        }
+        .rank-bronze { 
+            border-left: 4px solid var(--bronze) !important; 
+            background: rgba(180, 83, 9, 0.05) !important;
+        }
 
-        .shuffling { filter: blur(4px); opacity: 0.6; transform: scale(0.9); }
-        .btn-action { transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        @keyframes gold-pulse { 
+            0%, 100% { box-shadow: inset 0 0 15px rgba(251, 191, 36, 0.1); border-color: var(--gold); } 
+            50% { box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.25); border-color: #fff; } 
+        }
 
-        .modal-overlay { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px); }
-        
-        /* 旋轉動畫 */
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .list-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="min-h-screen pb-20">
 
-    <!-- 初始化選擇視窗 -->
+    <!-- 初始化選單 -->
     <div id="init-modal" class="fixed inset-0 z-[200] flex items-center justify-center">
-        <div class="absolute inset-0 bg-black"></div>
-        <div class="glass-card relative z-10 max-w-lg w-full p-10 rounded-3xl text-center border-cyan-500/30">
-            <h2 class="text-3xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 tech-font">SYSTEM INITIALIZATION</h2>
-            <p class="text-slate-400 mb-10">偵測到雲端同步功能。請選擇您的操作模式：</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button id="import-btn" onclick="importFromCloud()" class="p-6 rounded-2xl bg-cyan-600/20 border border-cyan-500/50 hover:bg-cyan-600/40 transition-all group relative overflow-hidden">
-                    <div id="import-text" class="text-cyan-400 font-bold mb-2">匯入雲端資料</div>
-                    <div class="text-[10px] text-slate-500">從 Google 試算表讀取上次進度</div>
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md"></div>
+        <div class="glass-card relative z-10 max-w-lg w-full p-10 rounded-3xl text-center border-cyan-500/30 shadow-2xl">
+            <h2 class="text-3xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 tech-font">SYSTEM BOOT</h2>
+            <div class="grid grid-cols-2 gap-6">
+                <button onclick="importFromCloud()" class="group p-6 rounded-2xl bg-cyan-600/10 border border-cyan-500/50 hover:bg-cyan-600/30 transition-all">
+                    <div class="text-cyan-400 font-bold mb-1">雲端匯入</div>
+                    <div class="text-[10px] text-slate-500 uppercase">Sync from GS</div>
                 </button>
                 <button onclick="closeInitModal()" class="p-6 rounded-2xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all">
-                    <div class="text-white font-bold mb-2">全新開始</div>
-                    <div class="text-[10px] text-slate-500">使用預設名單並清除本地快照</div>
+                    <div class="text-white font-bold mb-1">全新開始</div>
+                    <div class="text-[10px] text-slate-500 uppercase">Fresh Start</div>
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 pt-8">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+    <div class="max-w-7xl mx-auto px-4 pt-12">
+        <header class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div>
-                <h1 class="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
+                <h1 class="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600">
                     資優盃光驅動車大賽
                 </h1>
-                <p class="text-cyan-500/80 font-medium tracking-widest mt-1 tech-font italic uppercase">Cloud Sync Terminal</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                    <p class="text-cyan-500/60 font-bold tech-font text-sm uppercase tracking-widest">GitHub Sync Edition</p>
+                </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="exportToCloud()" class="flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/40 transition-all font-bold text-sm">
-                    <span id="sync-icon">☁️</span> <span id="sync-text">儲存至雲端</span>
+            <div class="flex gap-4">
+                <button onclick="exportToCloud()" class="group flex items-center gap-3 px-6 py-3 rounded-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/40 transition-all shadow-lg shadow-emerald-900/20">
+                    <span id="sync-icon" class="text-xl">☁️</span> 
+                    <span id="sync-text" class="font-bold">儲存至雲端試算表</span>
                 </button>
-                <button onclick="toggleManageMode()" id="manage-toggle-btn" class="px-5 py-2 rounded-full border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 transition-all font-bold text-sm">
-                    管理名單
-                </button>
+                <button onclick="toggleManage()" class="px-6 py-3 rounded-full border border-slate-700 text-slate-400 font-bold hover:bg-white/5 transition-all">管理名單</button>
             </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 space-y-8">
-                <!-- 隊伍管理 -->
+                <!-- 管理區 -->
                 <section id="setup-panel" class="glass-card rounded-3xl p-6 hidden">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold flex items-center tech-font text-cyan-400">TEAM REGISTRY</h2>
-                        <div class="flex gap-2">
-                            <button onclick="addTeam()" class="bg-cyan-600/20 text-cyan-400 px-4 py-1 rounded-lg border border-cyan-500/30 text-sm hover:bg-cyan-600/40">+ 新增</button>
-                        </div>
+                        <h3 class="font-bold tech-font text-cyan-400 tracking-widest">TEAM REGISTRY</h3>
+                        <button onclick="addTeam()" class="bg-cyan-600/20 text-cyan-400 border border-cyan-500/50 px-4 py-1 rounded-lg hover:bg-cyan-600/40">+ 新增</button>
                     </div>
-                    <div id="team-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2"></div>
+                    <div id="team-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </section>
 
-                <!-- 對戰看板 -->
-                <section id="battle-panel" class="glass-card rounded-3xl p-8 neon-border-blue relative overflow-hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center mb-10">
-                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-cyan-500/40">
-                            <div class="text-[10px] text-cyan-500 tech-font mb-2">PILOT A</div>
-                            <div id="p1-slot" class="text-4xl font-black text-white mb-4 h-16 flex items-center justify-center">---</div>
-                            <input type="number" id="p1-score-input" placeholder="距離 (cm)" class="w-full bg-black/70 border border-slate-700 rounded-xl py-3 px-4 text-center text-2xl text-cyan-400 font-mono focus:border-cyan-500 outline-none">
+                <!-- 比賽核心區 -->
+                <section class="glass-card rounded-[2.5rem] p-10 border-l-8 border-cyan-500 shadow-2xl relative overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-11 gap-6 items-center mb-12">
+                        <div class="md:col-span-5 p-8 rounded-3xl bg-slate-900/80 border border-white/5 text-center">
+                            <div class="text-[10px] text-cyan-500 tech-font mb-2 tracking-widest uppercase">Pilot Alpha</div>
+                            <div id="p1-name" class="text-4xl font-black text-white mb-6 h-12 flex items-center justify-center">---</div>
+                            <input type="number" id="p1-score" placeholder="輸入距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-2xl py-4 px-4 text-center text-3xl text-cyan-400 font-mono focus:border-cyan-500 outline-none transition-all">
                         </div>
-                        <div class="md:col-span-1 text-center font-black tech-font text-4xl text-slate-800 italic">VS</div>
-                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-purple-500/40">
-                            <div class="text-[10px] text-purple-500 tech-font mb-2">PILOT B</div>
-                            <div id="p2-slot" class="text-4xl font-black text-white mb-4 h-16 flex items-center justify-center">---</div>
-                            <input type="number" id="p2-score-input" placeholder="距離 (cm)" class="w-full bg-black/70 border border-slate-700 rounded-xl py-3 px-4 text-center text-2xl text-purple-400 font-mono focus:border-purple-500 outline-none">
+                        <div class="md:col-span-1 text-center text-3xl font-black tech-font text-slate-800">VS</div>
+                        <div class="md:col-span-5 p-8 rounded-3xl bg-slate-900/80 border border-white/5 text-center">
+                            <div class="text-[10px] text-purple-500 tech-font mb-2 tracking-widest uppercase">Pilot Bravo</div>
+                            <div id="p2-name" class="text-4xl font-black text-white mb-6 h-12 flex items-center justify-center">---</div>
+                            <input type="number" id="p2-score" placeholder="輸入距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-2xl py-4 px-4 text-center text-3xl text-purple-400 font-mono focus:border-purple-500 outline-none transition-all">
                         </div>
                     </div>
 
                     <div class="flex flex-col items-center">
-                        <div class="text-7xl font-black tech-font mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500" id="seconds-text">60</div>
+                        <div class="text-8xl font-black tech-font mb-10 tracking-tighter text-white" id="timer-display">60</div>
                         <div class="flex flex-wrap justify-center gap-4">
-                            <button onclick="drawMatch()" class="bg-blue-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">隨機抽籤</button>
-                            <button onclick="toggleTimer()" id="timer-control-btn" class="bg-cyan-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all">開始計時</button>
-                            <button onclick="saveMatchResult()" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-500 transition-all">紀錄成績</button>
+                            <button onclick="drawMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-900/40">隨機抽籤</button>
+                            <button id="timer-btn" onclick="toggleTimer()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-12 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-cyan-900/40">計時</button>
+                            <button onclick="saveMatch()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-900/40">紀錄成績</button>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <!-- 排行榜 -->
+            <!-- 右側排行榜 -->
             <div class="lg:col-span-4">
-                <section class="glass-card rounded-3xl p-6 h-full">
-                    <h2 class="text-xl font-bold mb-8 tech-font flex items-center">
-                        <span class="w-2 h-6 bg-cyan-500 mr-3 rounded-full"></span>
+                <section class="glass-card rounded-3xl p-8 h-full shadow-2xl">
+                    <h3 class="text-xl font-bold mb-8 tech-font flex items-center gap-3">
+                        <span class="w-2 h-8 bg-cyan-500 rounded-full"></span>
                         LEADERBOARD
-                    </h2>
-                    <div class="space-y-4" id="leaderboard-list"></div>
+                    </h3>
+                    <div id="leaderboard" class="space-y-4"></div>
                 </section>
-            </div>
-        </main>
-    </div>
-
-    <!-- 成績修正視窗 -->
-    <div id="edit-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
-        <div class="modal-overlay absolute inset-0" onclick="closeEditModal()"></div>
-        <div class="glass-card relative z-10 w-80 p-6 rounded-2xl border border-cyan-500/50 shadow-2xl">
-            <h3 class="text-lg font-bold mb-4 text-cyan-400">修正成績</h3>
-            <p id="edit-team-name" class="text-sm text-slate-300 mb-2">隊伍名稱</p>
-            <input type="number" id="edit-score-input" class="w-full bg-black/60 border border-slate-700 rounded-lg py-3 px-4 text-xl text-emerald-400 mb-6 outline-none focus:border-cyan-500">
-            <div class="flex gap-3">
-                <button onclick="closeEditModal()" class="flex-1 py-2 bg-slate-800 rounded-lg text-sm">取消</button>
-                <button onclick="confirmEditScore()" class="flex-1 py-2 bg-cyan-600 rounded-lg font-bold text-sm">確認修正</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-cyan-500/50 text-cyan-100 px-8 py-3 rounded-full opacity-0 transition-all z-50 pointer-events-none font-bold shadow-2xl"></div>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-cyan-500/50 text-cyan-200 px-10 py-3 rounded-full opacity-0 transition-all pointer-events-none text-sm font-bold shadow-2xl z-[300]"></div>
 
     <script>
-        // --- 已更新的 Google Apps Script URL ---
+        // 請填入您的 Google Apps Script 部署 URL
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyKk-6FsyLuGneCqcgnpCoBo1fHPAnXw4ez1gaTEimlkM0zcgfmuysFlOs8O1f7238/exec';
 
         let teams = [
             { id: 1, name: "光子旋風", score: 0, hasRaced: false },
-            { id: 2, name: "雷射之眼", score: 0, hasRaced: false },
-            { id: 3, name: "閃電騎士", score: 0, hasRaced: false },
-            { id: 4, name: "太陽能翼", score: 0, hasRaced: false }
+            { id: 2, name: "雷射之眼", score: 0, hasRaced: false }
         ];
+        let p1Data = null, p2Data = null, timerVal = 60, isRunning = false, interval = null;
 
-        let currentP1 = null, currentP2 = null;
-        let timerSeconds = 60, baseSeconds = 60;
-        let timerRunning = false, timerInterval = null;
-        let editingTeamId = null;
-
-        const synth = window.speechSynthesis;
-
-        // 雲端匯出邏輯
+        // 雲端功能 (同步 GitHub 與 GS)
         async function exportToCloud() {
-            const btnIcon = document.getElementById('sync-icon');
-            const btnText = document.getElementById('sync-text');
-            
-            btnIcon.innerText = "⏳";
-            btnIcon.classList.add('spin');
-            btnText.innerText = "同步中...";
+            const icon = document.getElementById('sync-icon');
+            const text = document.getElementById('sync-text');
+            icon.classList.add('spin');
+            text.innerText = "同步中...";
             
             try {
-                // 使用 no-cors 或讓 GAS 處理 CORS
-                const response = await fetch(scriptURL, {
+                await fetch(scriptURL, {
                     method: 'POST',
-                    mode: 'no-cors', // 重要：避免 CORS 預檢失敗
-                    cache: 'no-cache',
+                    mode: 'no-cors', 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(teams)
                 });
-                
-                // 因為 no-cors 不會回傳內容，我們假設成功
-                notify("✅ 資料已發送至雲端試算表");
-            } catch (err) {
-                console.error(err);
-                notify("❌ 同步失敗，請檢查網路連線");
+                notify("✅ 已嘗試寫入雲端");
+            } catch (e) {
+                notify("❌ 寫入失敗");
             } finally {
-                btnIcon.innerText = "☁️";
-                btnIcon.classList.remove('spin');
-                btnText.innerText = "儲存至雲端";
+                icon.classList.remove('spin');
+                text.innerText = "儲存至雲端試算表";
             }
         }
 
-        // 雲端匯入邏輯
         async function importFromCloud() {
-            const importText = document.getElementById('import-text');
-            importText.innerText = "讀取中...";
-            
+            notify("下載中...");
             try {
-                const response = await fetch(scriptURL);
-                const data = await response.json();
+                const res = await fetch(scriptURL);
+                const data = await res.json();
                 if (data && data.length > 0) {
                     teams = data;
-                    renderTeamInputs();
-                    updateLeaderboard();
-                    notify("✅ 已成功匯入雲端資料");
+                    updateUI();
                     closeInitModal();
-                } else {
-                    notify("⚠️ 雲端無資料，請全新開始");
+                    notify("✅ 資料同步成功");
                 }
-            } catch (err) {
-                console.error(err);
-                notify("❌ 無法匯入，請點擊全新開始");
-                importText.innerText = "匯入失敗";
+            } catch (e) {
+                notify("❌ 同步失敗，改為本地模式");
             }
         }
 
-        function closeInitModal() {
-            document.getElementById('init-modal').style.display = 'none';
-            renderTeamInputs();
-            updateLeaderboard();
-        }
+        function closeInitModal() { document.getElementById('init-modal').style.display = 'none'; updateUI(); }
 
-        // --- 比賽控制核心 ---
-        function speak(text) {
-            if (synth.speaking) synth.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'zh-TW';
-            synth.speak(u);
-        }
+        // UI 渲染 (重新加入隊名與呼吸燈特效)
+        function updateUI() {
+            const list = document.getElementById('team-list');
+            list.innerHTML = teams.map(t => `
+                <div class="flex items-center gap-3 p-3 bg-black/40 border border-white/5 rounded-2xl group">
+                    <input type="text" value="${t.name}" onchange="editName(${t.id}, this.value)" class="bg-transparent text-sm w-full outline-none focus:text-cyan-400">
+                    <button onclick="removeTeam(${t.id})" class="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all text-xl">×</button>
+                </div>
+            `).join('');
 
-        function toggleTimer() {
-            if (timerRunning) {
-                clearInterval(timerInterval);
-                timerRunning = false;
-                document.getElementById('timer-control-btn').innerText = "開始計時";
-            } else {
-                if (timerSeconds === baseSeconds) speak("比賽開始");
-                timerRunning = true;
-                document.getElementById('timer-control-btn').innerText = "暫停";
-                timerInterval = setInterval(() => {
-                    timerSeconds--;
-                    if (timerSeconds === 10) speak("最後十秒倒數");
-                    if (timerSeconds < 10 && timerSeconds > 0) speak(timerSeconds.toString());
-                    if (timerSeconds === 0) {
-                        speak("比賽結束");
-                        clearInterval(timerInterval);
-                        timerRunning = false;
-                        document.getElementById('timer-control-btn').innerText = "開始計時";
-                    }
-                    document.getElementById('seconds-text').innerText = timerSeconds;
-                }, 1000);
-            }
-        }
-
-        function drawMatch() {
-            const pool = teams.filter(t => !t.hasRaced);
-            if (pool.length === 0) return notify("所有隊伍皆已完賽");
-            
-            timerSeconds = baseSeconds;
-            document.getElementById('seconds-text').innerText = timerSeconds;
-            
-            const p1Idx = Math.floor(Math.random() * pool.length);
-            currentP1 = pool.splice(p1Idx, 1)[0];
-            currentP2 = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
-
-            document.getElementById('p1-slot').innerText = currentP1.name;
-            document.getElementById('p2-slot').innerText = currentP2 ? currentP2.name : "單隊出賽";
-        }
-
-        function saveMatchResult() {
-            if (!currentP1) return notify("請先進行抽籤");
-            const s1 = parseFloat(document.getElementById('p1-score-input').value) || 0;
-            const s2 = parseFloat(document.getElementById('p2-score-input').value) || 0;
-            
-            const prevTop3 = [...teams].sort((a,b) => b.score - a.score).slice(0, 3).map(t => t.id);
-
-            teams = teams.map(t => {
-                if (t.id === currentP1.id) { t.score = s1; t.hasRaced = true; }
-                if (currentP2 && t.id === currentP2.id) { t.score = s2; t.hasRaced = true; }
-                return t;
-            });
-
-            const newTop3 = [...teams].sort((a,b) => b.score - a.score).slice(0,3).map(t => t.id);
-            if (newTop3.some(id => !prevTop3.includes(id)) && (s1 > 0 || s2 > 0)) {
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f2ff', '#fbbf24'] });
-                speak("恭喜進入前三名");
-            }
-
-            updateLeaderboard();
-            notify("成績紀錄成功");
-            document.getElementById('p1-score-input').value = "";
-            document.getElementById('p2-score-input').value = "";
-        }
-
-        function updateLeaderboard() {
-            const list = document.getElementById('leaderboard-list');
+            const board = document.getElementById('leaderboard');
             const sorted = [...teams].sort((a,b) => b.score - a.score);
             
-            list.innerHTML = sorted.map((t, i) => {
-                let rankClass = "";
+            board.innerHTML = sorted.map((t, i) => {
+                let rankClass = "list-item";
                 if (t.score > 0) {
-                    if (i === 0) rankClass = "rank-gold";
-                    else if (i === 1) rankClass = "rank-silver";
-                    else if (i === 2) rankClass = "rank-bronze";
+                    if (i === 0) rankClass += " rank-gold";
+                    else if (i === 1) rankClass += " rank-silver";
+                    else if (i === 2) rankClass += " rank-bronze";
                 }
                 return `
-                    <div onclick="openEditModal(${t.id})" class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all ${rankClass} cursor-pointer group">
-                        <div class="flex items-center gap-3">
-                            <span class="tech-font font-bold w-4 text-slate-500">${i+1}</span>
-                            <span class="font-bold group-hover:text-cyan-400">${t.name}</span>
+                    <div class="flex justify-between items-center p-5 rounded-2xl border border-white/5 bg-white/5 ${rankClass}">
+                        <div class="flex items-center gap-4">
+                            <span class="tech-font font-black text-slate-600 w-4">${i+1}</span>
+                            <span class="font-bold text-lg">${t.name}</span>
                         </div>
-                        <div class="tech-font text-emerald-400 font-bold">${t.score} CM</div>
+                        <div class="tech-font text-emerald-400 font-black text-xl">${t.score}</div>
                     </div>
                 `;
             }).join('');
         }
 
-        function openEditModal(id) {
-            editingTeamId = id;
-            const t = teams.find(team => team.id === id);
-            document.getElementById('edit-team-name').innerText = t.name;
-            document.getElementById('edit-score-input').value = t.score;
-            document.getElementById('edit-modal').classList.remove('hidden');
+        function drawMatch() {
+            const pool = teams.filter(t => !t.hasRaced);
+            if (pool.length === 0) return notify("所有隊伍皆已完賽");
+            p1Data = pool.splice(Math.floor(Math.random()*pool.length), 1)[0];
+            p2Data = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : null;
+            document.getElementById('p1-name').innerText = p1Data.name;
+            document.getElementById('p2-name').innerText = p2Data ? p2Data.name : "測試賽";
+            timerVal = 60;
+            document.getElementById('timer-display').innerText = 60;
         }
 
-        function confirmEditScore() {
-            const val = parseFloat(document.getElementById('edit-score-input').value) || 0;
-            teams = teams.map(t => t.id === editingTeamId ? {...t, score: val, hasRaced: true} : t);
-            updateLeaderboard();
-            closeEditModal();
-            notify("成績已修正");
+        function saveMatch() {
+            if (!p1Data) return notify("請先進行抽籤");
+            const s1 = parseFloat(document.getElementById('p1-score').value) || 0;
+            const s2 = parseFloat(document.getElementById('p2-score').value) || 0;
+            
+            teams = teams.map(t => {
+                if (t.id === p1Data.id) { t.score = s1; t.hasRaced = true; }
+                if (p2Data && t.id === p2Data.id) { t.score = s2; t.hasRaced = true; }
+                return t;
+            });
+
+            if (s1 > 0 || s2 > 0) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            updateUI();
+            notify("紀錄完成，記得同步儲存");
         }
 
-        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
-
-        function renderTeamInputs() {
-            const container = document.getElementById('team-list-container');
-            container.innerHTML = teams.map(t => `
-                <div class="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center justify-between group">
-                    <input type="text" value="${t.name}" onchange="updateName(${t.id}, this.value)" class="bg-transparent focus:outline-none text-slate-300 font-medium w-full">
-                    <button onclick="removeTeam(${t.id})" class="text-slate-600 hover:text-red-500 px-2 opacity-0 group-hover:opacity-100 transition-all">×</button>
-                </div>
-            `).join('');
+        function toggleTimer() {
+            if (isRunning) { clearInterval(interval); isRunning = false; }
+            else {
+                isRunning = true;
+                interval = setInterval(() => {
+                    timerVal--;
+                    document.getElementById('timer-display').innerText = timerVal;
+                    if (timerVal <= 0) { clearInterval(interval); isRunning = false; }
+                }, 1000);
+            }
         }
 
-        function updateName(id, val) { teams = teams.map(t => t.id === id ? {...t, name: val} : t); }
-        function addTeam() { teams.push({id: Date.now(), name: "新隊伍", score: 0, hasRaced: false}); renderTeamInputs(); }
-        function removeTeam(id) { teams = teams.filter(t => t.id !== id); renderTeamInputs(); }
-        function toggleManageMode() { document.getElementById('setup-panel').classList.toggle('hidden'); }
         function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2500); }
+        function toggleManage() { document.getElementById('setup-panel').classList.toggle('hidden'); }
+        function addTeam() { teams.push({id:Date.now(), name:"新隊伍", score:0, hasRaced:false}); updateUI(); }
+        function removeTeam(id) { teams = teams.filter(t => t.id !== id); updateUI(); }
+        function editName(id, val) { teams = teams.map(t => t.id === id ? {...t, name:val} : t); }
     </script>
 </body>
 </html>
