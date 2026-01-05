@@ -386,8 +386,22 @@
             notify("🏆 紀錄成功，已更新排行榜");
         }
 
-        function updateCustomTimer(val) { defaultSeconds = parseInt(val) || 60; if (!isRunning) timerVal = defaultSeconds; handleTimerVisual(timerVal); }
-        function resetTimer() { clearInterval(interval); isRunning = false; timerVal = defaultSeconds; document.getElementById('timer-input').value = timerVal; document.getElementById('timer-btn').innerText = "開始計時"; handleTimerVisual(timerVal); }
+        function updateCustomTimer(val) { 
+            defaultSeconds = parseInt(val) || 60; 
+            if (!isRunning) {
+                timerVal = defaultSeconds;
+                handleTimerVisual(timerVal);
+            }
+        }
+        
+        function resetTimer() { 
+            clearInterval(interval); 
+            isRunning = false; 
+            timerVal = defaultSeconds; 
+            document.getElementById('timer-input').value = timerVal; 
+            document.getElementById('timer-btn').innerText = "開始計時"; 
+            handleTimerVisual(timerVal); 
+        }
 
         function handleTimerVisual(val) {
             const input = document.getElementById('timer-input');
@@ -401,12 +415,17 @@
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
             const input = document.getElementById('timer-input');
-            if (isRunning) { clearInterval(interval); isRunning = false; btn.innerText = "繼續計時"; }
-            else {
-                isRunning = true; btn.innerText = "暫停計時";
+            if (isRunning) { 
+                clearInterval(interval); 
+                isRunning = false; 
+                btn.innerText = "繼續計時"; 
+            } else {
+                isRunning = true; 
+                btn.innerText = "暫停計時";
                 speak("比賽開始！");
                 interval = setInterval(() => {
-                    timerVal--; input.value = timerVal;
+                    timerVal--; 
+                    input.value = timerVal;
                     handleTimerVisual(timerVal);
 
                     // 倒數 10 秒語音播報
@@ -418,8 +437,13 @@
                         clearInterval(interval); 
                         isRunning = false; 
                         btn.innerText = "時間到"; 
-                        speak("比賽時間到！請紀錄成績。"); 
+                        speak("時間到，比賽結束"); 
                         confetti({ particleCount: 50, colors: ['#ff4757', '#ffffff'] });
+                        
+                        // 自動回到原秒數 (延遲 2 秒讓語音講完)
+                        setTimeout(() => {
+                            resetTimer();
+                        }, 2000);
                     }
                 }, 1000);
             }
