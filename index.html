@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>資優盃光驅動車大賽 - 科技管理系統</title>
+    <title>資優盃光驅動車大賽 - 雲端管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -26,653 +26,344 @@
             background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #050a14 100%);
             color: #e2e8f0;
             overflow-x: hidden;
-            transition: background-color 0.3s ease;
-        }
-
-        body.timer-warning {
-            background-color: #1a0505;
         }
 
         .tech-font { font-family: 'Orbitron', sans-serif; }
-
-        .glass-card {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-        }
-
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .neon-border-blue { border-left: 4px solid var(--neon-blue); box-shadow: -5px 0 15px rgba(0, 242, 255, 0.2); }
         
-        .glow-text { text-shadow: 0 0 15px rgba(0, 242, 255, 0.7); }
-        .glow-text-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.7); }
-        .glow-text-red { text-shadow: 0 0 15px rgba(255, 49, 49, 0.7); }
+        /* 獎牌特效 */
+        .rank-gold { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important; border-left: 4px solid var(--gold) !important; animation: gold-pulse 3s infinite; }
+        .rank-silver { border-left: 4px solid var(--silver) !important; }
+        .rank-bronze { border-left: 4px solid var(--bronze) !important; }
+        @keyframes gold-pulse { 0%, 100% { box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1); } 50% { box-shadow: inset 0 0 40px rgba(251, 191, 36, 0.25); } }
 
-        /* 前三名特效 */
-        .rank-gold { 
-            background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
-            border-left: 4px solid var(--gold) !important;
-            box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
-            animation: gold-pulse 3s infinite ease-in-out;
-        }
-        .rank-silver { 
-            background: linear-gradient(90deg, rgba(148, 163, 184, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
-            border-left: 4px solid var(--silver) !important;
-        }
-        .rank-bronze { 
-            background: linear-gradient(90deg, rgba(180, 83, 9, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
-            border-left: 4px solid var(--bronze) !important;
-        }
+        .shuffling { filter: blur(4px); opacity: 0.6; transform: scale(0.9); }
+        .btn-action { transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.2); }
 
-        @keyframes gold-pulse {
-            0%, 100% { box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1); }
-            50% { box-shadow: inset 0 0 40px rgba(251, 191, 36, 0.25); }
-        }
-
-        .medal-icon {
-            filter: drop-shadow(0 0 8px currentColor);
-        }
-
-        .timer-circle {
-            transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
-        }
-
-        .slot-machine {
-            height: 5.5rem; 
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .slot-container {
-            transition: transform 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1);
-            line-height: 5.5rem;
-        }
-        .shuffling {
-            filter: blur(4px);
-            opacity: 0.6;
-            transform: scale(0.9);
-        }
-
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-        .btn-action {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-action:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.2);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
-        }
+        .modal-overlay { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px); }
         
-        .scanline {
-            width: 100%;
-            height: 2px;
-            background: rgba(0, 242, 255, 0.1);
-            position: absolute;
-            top: 0;
-            z-index: 10;
-            animation: scan 4s linear infinite;
-        }
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-
-        .team-name-display {
-            font-size: 3.5rem; 
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
-        }
-
-        .time-btn {
-            @apply px-3 py-1 rounded bg-slate-800 border border-slate-700 text-xs font-bold hover:bg-cyan-900/40 hover:border-cyan-500/50 transition-all;
-        }
-        .time-btn.active {
-            @apply bg-cyan-600 border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.5)];
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(4px);
-        }
+        /* 旋轉動畫 */
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen pb-20">
 
+    <!-- 初始化選擇視窗 -->
+    <div id="init-modal" class="fixed inset-0 z-[200] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black"></div>
+        <div class="glass-card relative z-10 max-w-lg w-full p-10 rounded-3xl text-center border-cyan-500/30">
+            <h2 class="text-3xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 tech-font">SYSTEM INITIALIZATION</h2>
+            <p class="text-slate-400 mb-10">偵測到雲端同步功能。請選擇您的操作模式：</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button id="import-btn" onclick="importFromCloud()" class="p-6 rounded-2xl bg-cyan-600/20 border border-cyan-500/50 hover:bg-cyan-600/40 transition-all group relative overflow-hidden">
+                    <div id="import-text" class="text-cyan-400 font-bold mb-2">匯入雲端資料</div>
+                    <div class="text-[10px] text-slate-500">從 Google 試算表讀取上次進度</div>
+                </button>
+                <button onclick="closeInitModal()" class="p-6 rounded-2xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all">
+                    <div class="text-white font-bold mb-2">全新開始</div>
+                    <div class="text-[10px] text-slate-500">使用預設名單並清除本地快照</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-7xl mx-auto px-4 pt-8">
-        <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
             <div>
                 <h1 class="text-4xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
                     資優盃光驅動車大賽
                 </h1>
-                <p class="text-cyan-500/80 font-medium tracking-widest mt-1 tech-font italic uppercase">Optic-Drive Competition Terminal</p>
+                <p class="text-cyan-500/80 font-medium tracking-widest mt-1 tech-font italic uppercase">Cloud Sync Terminal</p>
             </div>
-            <div class="flex gap-4">
-                <button onclick="toggleManageMode()" id="manage-toggle-btn" class="px-6 py-2 rounded-full border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 transition-all font-bold">
-                    管理隊伍名單
+            <div class="flex gap-3">
+                <button onclick="exportToCloud()" class="flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/40 transition-all font-bold text-sm">
+                    <span id="sync-icon">☁️</span> <span id="sync-text">儲存至雲端</span>
+                </button>
+                <button onclick="toggleManageMode()" id="manage-toggle-btn" class="px-5 py-2 rounded-full border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 transition-all font-bold text-sm">
+                    管理名單
                 </button>
             </div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <!-- Left Side: Battle & Setup -->
             <div class="lg:col-span-8 space-y-8">
-                
-                <!-- 隊伍名單管理區 -->
+                <!-- 隊伍管理 -->
                 <section id="setup-panel" class="glass-card rounded-3xl p-6 hidden">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold flex items-center tech-font">
-                            <span class="w-2 h-6 bg-cyan-500 rounded-full mr-3"></span>
-                            隊伍註冊系統
-                        </h2>
+                        <h2 class="text-xl font-bold flex items-center tech-font text-cyan-400">TEAM REGISTRY</h2>
                         <div class="flex gap-2">
-                            <button onclick="resetAllRaces()" class="bg-red-900/20 hover:bg-red-900/40 text-red-400 px-4 py-1 rounded-lg border border-red-500/30 text-sm">
-                                重置所有賽程
-                            </button>
-                            <button onclick="addTeam()" class="bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 px-4 py-1 rounded-lg border border-cyan-500/30 text-sm">
-                                + 新增隊伍
-                            </button>
+                            <button onclick="addTeam()" class="bg-cyan-600/20 text-cyan-400 px-4 py-1 rounded-lg border border-cyan-500/30 text-sm hover:bg-cyan-600/40">+ 新增</button>
                         </div>
                     </div>
-                    <div id="team-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
-                        <!-- 動態生成 -->
-                    </div>
-                    <div class="mt-8 flex justify-center">
-                        <button onclick="lockAndStart()" class="bg-cyan-600 hover:bg-cyan-400 text-white font-bold py-3 px-12 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all">
-                            確認並鎖定名單
-                        </button>
-                    </div>
+                    <div id="team-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2"></div>
                 </section>
 
-                <!-- 對戰抽籤區 -->
+                <!-- 對戰看板 -->
                 <section id="battle-panel" class="glass-card rounded-3xl p-8 neon-border-blue relative overflow-hidden">
-                    <div class="scanline"></div>
-                    
-                    <div class="text-center mb-6">
-                        <h2 class="text-2xl font-bold tech-font text-cyan-400 glow-text tracking-widest uppercase">Battle Arena</h2>
-                    </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center mb-10">
-                        <!-- Player A -->
-                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-cyan-500/40 relative overflow-hidden group">
-                            <span class="text-[10px] tracking-widest text-cyan-500 tech-font block mb-2 uppercase font-bold opacity-70">Pilot A</span>
-                            <div class="slot-machine mb-4">
-                                <div id="p1-slot" class="slot-container team-name-display text-white glow-text">---</div>
-                            </div>
-                            <div class="relative z-10">
-                                <input type="number" id="p1-score-input" placeholder="距離 (cm)" 
-                                    class="w-full bg-black/70 border border-slate-700 rounded-xl py-3 px-4 text-center text-2xl focus:border-cyan-500 focus:outline-none transition-all text-cyan-400 font-mono">
-                            </div>
+                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-cyan-500/40">
+                            <div class="text-[10px] text-cyan-500 tech-font mb-2">PILOT A</div>
+                            <div id="p1-slot" class="text-4xl font-black text-white mb-4 h-16 flex items-center justify-center">---</div>
+                            <input type="number" id="p1-score-input" placeholder="距離 (cm)" class="w-full bg-black/70 border border-slate-700 rounded-xl py-3 px-4 text-center text-2xl text-cyan-400 font-mono focus:border-cyan-500 outline-none">
                         </div>
-
-                        <div class="md:col-span-1 text-center font-black tech-font text-4xl text-slate-800 italic animate-pulse">VS</div>
-
-                        <!-- Player B -->
-                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-purple-500/40 relative overflow-hidden group">
-                            <span class="text-[10px] tracking-widest text-purple-500 tech-font block mb-2 uppercase font-bold opacity-70">Pilot B</span>
-                            <div class="slot-machine mb-4">
-                                <div id="p2-slot" class="slot-container team-name-display text-white glow-text-pink">---</div>
-                            </div>
-                            <div class="relative z-10">
-                                <input type="number" id="p2-score-input" placeholder="距離 (cm)" 
-                                    class="w-full bg-black/70 border border-slate-700 rounded-xl py-3 px-4 text-center text-2xl focus:border-purple-500 focus:outline-none transition-all text-purple-400 font-mono">
-                            </div>
+                        <div class="md:col-span-1 text-center font-black tech-font text-4xl text-slate-800 italic">VS</div>
+                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-purple-500/40">
+                            <div class="text-[10px] text-purple-500 tech-font mb-2">PILOT B</div>
+                            <div id="p2-slot" class="text-4xl font-black text-white mb-4 h-16 flex items-center justify-center">---</div>
+                            <input type="number" id="p2-score-input" placeholder="距離 (cm)" class="w-full bg-black/70 border border-slate-700 rounded-xl py-3 px-4 text-center text-2xl text-purple-400 font-mono focus:border-purple-500 outline-none">
                         </div>
                     </div>
 
-                    <!-- 計時器與控制 -->
                     <div class="flex flex-col items-center">
-                        <div class="relative mb-2" id="timer-container">
-                            <svg class="w-40 h-40 transform -rotate-90">
-                                <circle cx="80" cy="80" r="74" stroke="currentColor" stroke-width="6" fill="transparent" class="text-slate-800" />
-                                <circle id="timer-bar" cx="80" cy="80" r="74" stroke="currentColor" stroke-width="6" fill="transparent" 
-                                    stroke-dasharray="465" stroke-dashoffset="0" class="text-cyan-500 transition-all timer-circle" stroke-linecap="round" />
-                            </svg>
-                            <div id="timer-display" class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-4xl font-bold tech-font tracking-tighter" id="seconds-text">60</span>
-                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Time Left</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 mb-6 bg-black/30 p-2 rounded-xl border border-white/5">
-                            <button onclick="setBaseTime(30)" class="time-btn" id="t-30">30s</button>
-                            <button onclick="setBaseTime(60)" class="time-btn active" id="t-60">60s</button>
-                            <button onclick="setBaseTime(90)" class="time-btn" id="t-90">90s</button>
-                            <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
-                            <div class="flex items-center">
-                                <input type="number" id="custom-time-input" placeholder="自訂" class="w-12 bg-transparent border-b border-slate-600 text-center text-xs focus:outline-none focus:border-cyan-500 text-cyan-400 font-bold">
-                                <button onclick="setCustomTime()" class="ml-2 text-[9px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300">設定</button>
-                            </div>
-                        </div>
-
+                        <div class="text-7xl font-black tech-font mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500" id="seconds-text">60</div>
                         <div class="flex flex-wrap justify-center gap-4">
-                            <button id="draw-btn" onclick="drawMatch()" class="btn-action bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-6 py-3 rounded-xl font-black text-base border border-blue-400/30">
-                                隨機對戰抽籤
-                            </button>
-                            <button id="timer-control-btn" onclick="toggleTimer()" class="btn-action bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-cyan-900">
-                                開始計時
-                            </button>
-                            <button onclick="saveMatchResult()" class="btn-action bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900">
-                                紀錄成績
-                            </button>
+                            <button onclick="drawMatch()" class="bg-blue-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">隨機抽籤</button>
+                            <button onclick="toggleTimer()" id="timer-control-btn" class="bg-cyan-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all">開始計時</button>
+                            <button onclick="saveMatchResult()" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-500 transition-all">紀錄成績</button>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <!-- Right Side: Leaderboard -->
+            <!-- 排行榜 -->
             <div class="lg:col-span-4">
-                <section class="glass-card rounded-3xl p-6 h-full border-t border-white/5 relative">
-                    <div class="flex items-center justify-between mb-8">
-                        <h2 class="text-xl font-bold tech-font tracking-tight flex items-center">
-                            <span class="w-2 h-6 bg-emerald-500 rounded-full mr-3"></span>
-                            即時排行榜
-                        </h2>
-                        <span id="match-progress" class="text-[10px] text-slate-500 tech-font">0/0 RACED</span>
-                    </div>
-
-                    <div class="space-y-4" id="leaderboard-list">
-                        <!-- 動態生成 -->
-                    </div>
-
-                    <div id="no-data" class="text-center py-20 text-slate-600 italic text-sm">
-                        Waiting for results...
-                    </div>
+                <section class="glass-card rounded-3xl p-6 h-full">
+                    <h2 class="text-xl font-bold mb-8 tech-font flex items-center">
+                        <span class="w-2 h-6 bg-cyan-500 mr-3 rounded-full"></span>
+                        LEADERBOARD
+                    </h2>
+                    <div class="space-y-4" id="leaderboard-list"></div>
                 </section>
             </div>
         </main>
     </div>
 
-    <!-- 修改成績視窗 -->
+    <!-- 成績修正視窗 -->
     <div id="edit-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
         <div class="modal-overlay absolute inset-0" onclick="closeEditModal()"></div>
-        <div class="glass-card relative z-10 w-80 p-6 rounded-2xl border border-cyan-500/50 shadow-[0_0_50px_rgba(6,182,212,0.3)]">
-            <h3 class="text-lg font-bold mb-4 text-cyan-400 tech-font uppercase">修正成績</h3>
-            <p id="edit-team-name" class="text-sm text-slate-300 mb-2 font-bold">隊伍名稱</p>
-            <input type="number" id="edit-score-input" class="w-full bg-black/60 border border-slate-700 rounded-lg py-3 px-4 text-center text-xl text-emerald-400 font-mono focus:border-cyan-500 focus:outline-none mb-6">
+        <div class="glass-card relative z-10 w-80 p-6 rounded-2xl border border-cyan-500/50 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-cyan-400">修正成績</h3>
+            <p id="edit-team-name" class="text-sm text-slate-300 mb-2">隊伍名稱</p>
+            <input type="number" id="edit-score-input" class="w-full bg-black/60 border border-slate-700 rounded-lg py-3 px-4 text-xl text-emerald-400 mb-6 outline-none focus:border-cyan-500">
             <div class="flex gap-3">
-                <button onclick="closeEditModal()" class="flex-1 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm hover:bg-slate-700">取消</button>
-                <button onclick="confirmEditScore()" class="flex-1 py-2 rounded-lg bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-500">確認修改</button>
+                <button onclick="closeEditModal()" class="flex-1 py-2 bg-slate-800 rounded-lg text-sm">取消</button>
+                <button onclick="confirmEditScore()" class="flex-1 py-2 bg-cyan-600 rounded-lg font-bold text-sm">確認修正</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-cyan-500/50 text-cyan-100 px-8 py-3 rounded-full shadow-2xl opacity-0 transition-all z-50 pointer-events-none font-bold">
-        系統訊息
-    </div>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-cyan-500/50 text-cyan-100 px-8 py-3 rounded-full opacity-0 transition-all z-50 pointer-events-none font-bold shadow-2xl"></div>
 
     <script>
-        // 音效與語音管理器
-        const SFX = {
-            audioCtx: null,
-            synth: window.speechSynthesis,
-            init() {
-                if (!this.audioCtx) {
-                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            },
-            speak(text) {
-                if (this.synth.speaking) this.synth.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 1.1;
-                this.synth.speak(utterance);
-            },
-            play(type) {
-                this.init();
-                const ctx = this.audioCtx;
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                const now = ctx.currentTime;
-                switch(type) {
-                    case 'click':
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(800, now);
-                        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                        gain.gain.setValueAtTime(0.1, now);
-                        gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                        osc.start(); osc.stop(now + 0.1);
-                        break;
-                    case 'draw':
-                        osc.type = 'square';
-                        osc.frequency.setValueAtTime(150, now);
-                        gain.gain.setValueAtTime(0.05, now);
-                        gain.gain.linearRampToValueAtTime(0, now + 0.05);
-                        osc.start(); osc.stop(now + 0.05);
-                        break;
-                    case 'tick':
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(600, now);
-                        gain.gain.setValueAtTime(0.1, now);
-                        gain.gain.linearRampToValueAtTime(0, now + 0.05);
-                        osc.start(); osc.stop(now + 0.05);
-                        break;
-                    case 'alarm':
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(200, now);
-                        gain.gain.setValueAtTime(0.3, now);
-                        gain.gain.linearRampToValueAtTime(0, now + 1);
-                        osc.start(); osc.stop(now + 1);
-                        break;
-                    case 'save':
-                        osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(400, now);
-                        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
-                        gain.gain.setValueAtTime(0.1, now);
-                        gain.gain.linearRampToValueAtTime(0, now + 0.3);
-                        osc.start(); osc.stop(now + 0.3);
-                        break;
-                }
-            }
-        };
+        // --- 已更新的 Google Apps Script URL ---
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyKk-6FsyLuGneCqcgnpCoBo1fHPAnXw4ez1gaTEimlkM0zcgfmuysFlOs8O1f7238/exec';
 
-        // 狀態管理
         let teams = [
-            { id: 1, name: "光子旋風", score: 0, hasRaced: false }, { id: 2, name: "雷射之眼", score: 0, hasRaced: false },
-            { id: 3, name: "閃電騎士", score: 0, hasRaced: false }, { id: 4, name: "太陽能翼", score: 0, hasRaced: false },
-            { id: 5, name: "影之驅動", score: 0, hasRaced: false }, { id: 6, name: "極光戰機", score: 0, hasRaced: false },
-            { id: 7, name: "真空躍遷", score: 0, hasRaced: false }, { id: 8, name: "紅外線殺手", score: 0, hasRaced: false }
+            { id: 1, name: "光子旋風", score: 0, hasRaced: false },
+            { id: 2, name: "雷射之眼", score: 0, hasRaced: false },
+            { id: 3, name: "閃電騎士", score: 0, hasRaced: false },
+            { id: 4, name: "太陽能翼", score: 0, hasRaced: false }
         ];
 
-        let currentP1 = null; let currentP2 = null;
-        let baseSeconds = 60; let timerSeconds = 60;
-        let timerRunning = false; let timerInterval = null; let isDrawing = false;
+        let currentP1 = null, currentP2 = null;
+        let timerSeconds = 60, baseSeconds = 60;
+        let timerRunning = false, timerInterval = null;
         let editingTeamId = null;
 
-        window.onload = () => { renderTeamInputs(); updateLeaderboard(); };
+        const synth = window.speechSynthesis;
 
-        function renderTeamInputs() {
-            const container = document.getElementById('team-list-container');
-            container.innerHTML = '';
-            teams.forEach((team, index) => {
-                const div = document.createElement('div');
-                div.className = 'group relative flex items-center bg-black/40 border border-slate-800 rounded-xl p-3 focus-within:border-cyan-500/50 transition-all';
-                div.innerHTML = `
-                    <span class="tech-font text-xs text-slate-600 mr-3 w-4">${index + 1}</span>
-                    <input type="text" value="${team.name}" onchange="updateTeamName(${team.id}, this.value)" 
-                        class="bg-transparent border-none text-slate-200 focus:outline-none flex-grow font-medium">
-                    <button onclick="removeTeam(${team.id})" class="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all px-2">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function updateTeamName(id, newName) {
-            const team = teams.find(t => t.id === id);
-            if (team) team.name = newName;
-        }
-
-        function addTeam() {
-            SFX.play('click');
-            const newId = Date.now();
-            teams.push({ id: newId, name: `新隊伍 ${teams.length + 1}`, score: 0, hasRaced: false });
-            renderTeamInputs();
-        }
-
-        function removeTeam(id) {
-            SFX.play('click');
-            if (teams.length <= 1) return notify("至少需保留 1 個隊伍");
-            teams = teams.filter(t => t.id !== id);
-            renderTeamInputs();
-        }
-
-        function resetAllRaces() {
-            if (!confirm("確定要重置所有成績與賽程標記嗎？")) return;
-            teams = teams.map(t => ({ ...t, score: 0, hasRaced: false }));
-            updateLeaderboard();
-            renderTeamInputs();
-            notify("所有賽程已重置");
-        }
-
-        function toggleManageMode() {
-            SFX.play('click');
-            const panel = document.getElementById('setup-panel');
-            const btn = document.getElementById('manage-toggle-btn');
-            panel.classList.toggle('hidden');
-            btn.innerText = panel.classList.contains('hidden') ? "管理隊伍名單" : "關閉管理視窗";
-        }
-
-        function lockAndStart() { 
-            SFX.play('save');
-            toggleManageMode(); 
-            notify("名單已鎖定"); 
-            updateLeaderboard(); 
-        }
-
-        function setBaseTime(s) {
-            if (timerRunning) return;
-            SFX.play('click');
-            baseSeconds = s; resetTimer();
-            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
-            if (document.getElementById(`t-${s}`)) document.getElementById(`t-${s}`).classList.add('active');
-        }
-
-        function setCustomTime() {
-            const val = parseInt(document.getElementById('custom-time-input').value);
-            if (val > 0) setBaseTime(val);
-        }
-
-        async function drawMatch() {
-            if (timerRunning || isDrawing) return;
-            const unRacedTeams = teams.filter(t => !t.hasRaced);
-            if (unRacedTeams.length === 0) return notify("所有隊伍皆已完成比賽！");
-
-            isDrawing = true; resetTimer();
-            const p1Slot = document.getElementById('p1-slot');
-            const p2Slot = document.getElementById('p2-slot');
+        // 雲端匯出邏輯
+        async function exportToCloud() {
+            const btnIcon = document.getElementById('sync-icon');
+            const btnText = document.getElementById('sync-text');
             
-            const pool = [...unRacedTeams];
-            const p1 = pool.splice(Math.floor(Math.random()*pool.length), 1)[0];
-            const p2 = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : { id: -1, name: "無 (單隊出賽)" };
+            btnIcon.innerText = "⏳";
+            btnIcon.classList.add('spin');
+            btnText.innerText = "同步中...";
+            
+            try {
+                // 使用 no-cors 或讓 GAS 處理 CORS
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors', // 重要：避免 CORS 預檢失敗
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(teams)
+                });
+                
+                // 因為 no-cors 不會回傳內容，我們假設成功
+                notify("✅ 資料已發送至雲端試算表");
+            } catch (err) {
+                console.error(err);
+                notify("❌ 同步失敗，請檢查網路連線");
+            } finally {
+                btnIcon.innerText = "☁️";
+                btnIcon.classList.remove('spin');
+                btnText.innerText = "儲存至雲端";
+            }
+        }
 
-            let count = 0;
-            const interval = setInterval(() => {
-                SFX.play('draw');
-                p1Slot.innerText = teams[Math.floor(Math.random()*teams.length)].name;
-                p2Slot.innerText = teams[Math.floor(Math.random()*teams.length)].name;
-                p1Slot.classList.add('shuffling'); p2Slot.classList.add('shuffling');
-                if (++count > 20) {
-                    clearInterval(interval);
-                    p1Slot.innerText = p1.name; 
-                    p2Slot.innerText = p2.name;
-                    p1Slot.classList.remove('shuffling'); p2Slot.classList.remove('shuffling');
-                    currentP1 = p1; 
-                    currentP2 = (p2.id === -1) ? null : p2;
-                    isDrawing = false;
-                    SFX.play('save');
+        // 雲端匯入邏輯
+        async function importFromCloud() {
+            const importText = document.getElementById('import-text');
+            importText.innerText = "讀取中...";
+            
+            try {
+                const response = await fetch(scriptURL);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    teams = data;
+                    renderTeamInputs();
+                    updateLeaderboard();
+                    notify("✅ 已成功匯入雲端資料");
+                    closeInitModal();
+                } else {
+                    notify("⚠️ 雲端無資料，請全新開始");
                 }
-            }, 70);
+            } catch (err) {
+                console.error(err);
+                notify("❌ 無法匯入，請點擊全新開始");
+                importText.innerText = "匯入失敗";
+            }
         }
 
-        function toggleTimer() { 
-            SFX.play('click');
-            timerRunning ? stopTimer() : startTimer(); 
+        function closeInitModal() {
+            document.getElementById('init-modal').style.display = 'none';
+            renderTeamInputs();
+            updateLeaderboard();
         }
 
-        function startTimer() {
-            if (timerSeconds === baseSeconds) SFX.speak("比賽開始");
-            timerRunning = true;
-            document.getElementById('timer-control-btn').innerText = "暫停";
-            timerInterval = setInterval(() => {
-                timerSeconds--;
-                if (timerSeconds === 10) SFX.speak("最後十秒倒數");
-                else if (timerSeconds < 10 && timerSeconds > 0) {
-                    SFX.play('tick');
-                    SFX.speak(timerSeconds.toString());
-                } else if (timerSeconds === 0) {
-                    handleTimerEnd();
-                }
-                if (timerSeconds <= 0) { stopTimer(); timerSeconds = 0; }
-                updateTimerDisplay();
-            }, 1000);
+        // --- 比賽控制核心 ---
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'zh-TW';
+            synth.speak(u);
         }
 
-        function handleTimerEnd() {
-            SFX.play('alarm');
-            SFX.speak("比賽結束，請停止操作");
-            notify("時間到！");
-            document.body.classList.add('timer-warning');
-            document.getElementById('timer-container').classList.add('shake');
-            document.getElementById('timer-bar').classList.replace('text-cyan-500', 'text-red-500');
-            document.getElementById('seconds-text').classList.add('text-red-500', 'glow-text-red');
-            setTimeout(() => document.getElementById('timer-container').classList.remove('shake'), 1000);
+        function toggleTimer() {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                document.getElementById('timer-control-btn').innerText = "開始計時";
+            } else {
+                if (timerSeconds === baseSeconds) speak("比賽開始");
+                timerRunning = true;
+                document.getElementById('timer-control-btn').innerText = "暫停";
+                timerInterval = setInterval(() => {
+                    timerSeconds--;
+                    if (timerSeconds === 10) speak("最後十秒倒數");
+                    if (timerSeconds < 10 && timerSeconds > 0) speak(timerSeconds.toString());
+                    if (timerSeconds === 0) {
+                        speak("比賽結束");
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        document.getElementById('timer-control-btn').innerText = "開始計時";
+                    }
+                    document.getElementById('seconds-text').innerText = timerSeconds;
+                }, 1000);
+            }
         }
 
-        function stopTimer() { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-control-btn').innerText = "繼續計時"; }
-
-        function resetTimer() { 
-            stopTimer(); 
-            timerSeconds = baseSeconds; 
-            document.body.classList.remove('timer-warning');
-            document.getElementById('timer-bar').classList.replace('text-red-500', 'text-cyan-500');
-            document.getElementById('seconds-text').classList.remove('text-red-500', 'glow-text-red');
-            updateTimerDisplay(); 
-            document.getElementById('timer-control-btn').innerText = "開始計時"; 
-        }
-
-        function updateTimerDisplay() {
+        function drawMatch() {
+            const pool = teams.filter(t => !t.hasRaced);
+            if (pool.length === 0) return notify("所有隊伍皆已完賽");
+            
+            timerSeconds = baseSeconds;
             document.getElementById('seconds-text').innerText = timerSeconds;
-            document.getElementById('timer-bar').style.strokeDashoffset = 465 - (timerSeconds / baseSeconds) * 465;
+            
+            const p1Idx = Math.floor(Math.random() * pool.length);
+            currentP1 = pool.splice(p1Idx, 1)[0];
+            currentP2 = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+
+            document.getElementById('p1-slot').innerText = currentP1.name;
+            document.getElementById('p2-slot').innerText = currentP2 ? currentP2.name : "單隊出賽";
         }
 
         function saveMatchResult() {
-            if (!currentP1) return notify("請先抽籤");
-            SFX.play('save');
+            if (!currentP1) return notify("請先進行抽籤");
             const s1 = parseFloat(document.getElementById('p1-score-input').value) || 0;
             const s2 = parseFloat(document.getElementById('p2-score-input').value) || 0;
             
-            const prevTopIds = [...teams].sort((a,b) => b.score - a.score).slice(0, 3).map(t => t.id);
+            const prevTop3 = [...teams].sort((a,b) => b.score - a.score).slice(0, 3).map(t => t.id);
 
             teams = teams.map(t => {
-                if (t.id === currentP1.id) { t.score = Math.max(t.score, s1); t.hasRaced = true; }
-                if (currentP2 && t.id === currentP2.id) { t.score = Math.max(t.score, s2); t.hasRaced = true; }
+                if (t.id === currentP1.id) { t.score = s1; t.hasRaced = true; }
+                if (currentP2 && t.id === currentP2.id) { t.score = s2; t.hasRaced = true; }
                 return t;
             });
-            
-            const newSorted = [...teams].sort((a,b) => b.score - a.score);
-            const newTopIds = newSorted.slice(0, 3).map(t => t.id);
 
-            // 如果有人新進入前三名，放煙火
-            const enteredTop3 = newTopIds.some(id => !prevTopIds.includes(id) && teams.find(t => t.id === id).score > 0);
-            if (enteredTop3) {
-                fireConfetti();
-                SFX.speak("恭喜進入前三名！");
+            const newTop3 = [...teams].sort((a,b) => b.score - a.score).slice(0,3).map(t => t.id);
+            if (newTop3.some(id => !prevTop3.includes(id)) && (s1 > 0 || s2 > 0)) {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f2ff', '#fbbf24'] });
+                speak("恭喜進入前三名");
             }
 
-            updateLeaderboard(); notify("成績已儲存"); resetTimer();
-            document.getElementById('p1-score-input').value = '';
-            document.getElementById('p2-score-input').value = '';
-            currentP1 = null; currentP2 = null;
-            document.getElementById('p1-slot').innerText = "---";
-            document.getElementById('p2-slot').innerText = "---";
-        }
-
-        function fireConfetti() {
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f2ff', '#fbbf24', '#ff00ff'] });
+            updateLeaderboard();
+            notify("成績紀錄成功");
+            document.getElementById('p1-score-input').value = "";
+            document.getElementById('p2-score-input').value = "";
         }
 
         function updateLeaderboard() {
             const list = document.getElementById('leaderboard-list');
             const sorted = [...teams].sort((a,b) => b.score - a.score);
-            const racedCount = teams.filter(t => t.hasRaced).length;
-            
-            document.getElementById('match-progress').innerText = `${racedCount}/${teams.length} RACED`;
-            document.getElementById('no-data').classList.toggle('hidden', true);
             
             list.innerHTML = sorted.map((t, i) => {
                 let rankClass = "";
-                let medalIcon = "";
-                
                 if (t.score > 0) {
-                    if (i === 0) {
-                        rankClass = "rank-gold";
-                        medalIcon = `<svg class="medal-icon text-yellow-400 w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/></svg>`;
-                    } else if (i === 1) {
-                        rankClass = "rank-silver";
-                        medalIcon = `<svg class="medal-icon text-slate-400 w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/></svg>`;
-                    } else if (i === 2) {
-                        rankClass = "rank-bronze";
-                        medalIcon = `<svg class="medal-icon text-orange-700 w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/></svg>`;
-                    }
+                    if (i === 0) rankClass = "rank-gold";
+                    else if (i === 1) rankClass = "rank-silver";
+                    else if (i === 2) rankClass = "rank-bronze";
                 }
-
                 return `
-                <div onclick="openEditModal(${t.id})" class="rank-row flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-all group ${rankClass}">
-                    <div class="flex items-center gap-4">
-                        <div class="relative flex items-center justify-center w-8">
-                            ${medalIcon || `<span class="tech-font font-black text-xl text-slate-500">${i+1}</span>`}
+                    <div onclick="openEditModal(${t.id})" class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all ${rankClass} cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <span class="tech-font font-bold w-4 text-slate-500">${i+1}</span>
+                            <span class="font-bold group-hover:text-cyan-400">${t.name}</span>
                         </div>
-                        <div>
-                            <div class="font-bold text-slate-100 flex items-center gap-2">
-                                ${t.name}
-                                ${t.hasRaced ? 
-                                    '<span class="text-[8px] bg-emerald-500/20 text-emerald-400 px-1 rounded border border-emerald-500/30 uppercase">Raced</span>' : 
-                                    '<span class="text-[8px] bg-slate-700 text-slate-400 px-1 rounded uppercase">Pending</span>'}
-                            </div>
-                        </div>
+                        <div class="tech-font text-emerald-400 font-bold">${t.score} CM</div>
                     </div>
-                    <div class="text-right">
-                        <div class="tech-font font-bold text-emerald-400 text-xl group-hover:text-cyan-400 transition-colors">
-                            ${t.score} <span class="text-[9px] text-slate-500">CM</span>
-                        </div>
-                    </div>
-                </div>
-            `}).join('');
+                `;
+            }).join('');
         }
 
-        function openEditModal(teamId) {
-            const team = teams.find(t => t.id === teamId);
-            if (!team) return;
-            editingTeamId = teamId;
-            document.getElementById('edit-team-name').innerText = team.name;
-            document.getElementById('edit-score-input').value = team.score;
+        function openEditModal(id) {
+            editingTeamId = id;
+            const t = teams.find(team => team.id === id);
+            document.getElementById('edit-team-name').innerText = t.name;
+            document.getElementById('edit-score-input').value = t.score;
             document.getElementById('edit-modal').classList.remove('hidden');
-            SFX.play('click');
-        }
-
-        function closeEditModal() {
-            document.getElementById('edit-modal').classList.add('hidden');
-            editingTeamId = null;
         }
 
         function confirmEditScore() {
-            const newVal = parseFloat(document.getElementById('edit-score-input').value) || 0;
-            teams = teams.map(t => {
-                if (t.id === editingTeamId) { t.score = newVal; t.hasRaced = true; }
-                return t;
-            });
+            const val = parseFloat(document.getElementById('edit-score-input').value) || 0;
+            teams = teams.map(t => t.id === editingTeamId ? {...t, score: val, hasRaced: true} : t);
             updateLeaderboard();
             closeEditModal();
-            SFX.play('save');
-            notify("成績修正成功");
+            notify("成績已修正");
         }
 
-        function notify(msg) {
-            const t = document.getElementById('toast'); t.innerText = msg; t.style.opacity = '1';
-            setTimeout(() => t.style.opacity = '0', 2500);
+        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
+
+        function renderTeamInputs() {
+            const container = document.getElementById('team-list-container');
+            container.innerHTML = teams.map(t => `
+                <div class="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center justify-between group">
+                    <input type="text" value="${t.name}" onchange="updateName(${t.id}, this.value)" class="bg-transparent focus:outline-none text-slate-300 font-medium w-full">
+                    <button onclick="removeTeam(${t.id})" class="text-slate-600 hover:text-red-500 px-2 opacity-0 group-hover:opacity-100 transition-all">×</button>
+                </div>
+            `).join('');
         }
+
+        function updateName(id, val) { teams = teams.map(t => t.id === id ? {...t, name: val} : t); }
+        function addTeam() { teams.push({id: Date.now(), name: "新隊伍", score: 0, hasRaced: false}); renderTeamInputs(); }
+        function removeTeam(id) { teams = teams.filter(t => t.id !== id); renderTeamInputs(); }
+        function toggleManageMode() { document.getElementById('setup-panel').classList.toggle('hidden'); }
+        function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2500); }
     </script>
 </body>
 </html>
