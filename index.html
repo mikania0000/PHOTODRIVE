@@ -15,6 +15,7 @@
             --gold: #fbbf24;
             --silver: #e2e8f0;
             --bronze: #cd7f32;
+            --neon-red: #ff4757;
         }
 
         body {
@@ -28,41 +29,43 @@
         .tech-font { font-family: 'Orbitron', sans-serif; }
         .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
-        /* 隊名字效調整：縮小並加強發光 */
+        /* 隊名字效調整：稍微放大至 3rem 並加強發光 */
         .team-display-name {
-            font-size: 2.5rem; 
+            font-size: 3rem; 
             font-weight: 900;
             letter-spacing: -0.05em;
-            text-shadow: 0 0 15px rgba(0, 242, 255, 0.5), 0 0 30px rgba(0, 242, 255, 0.2);
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.6), 0 0 40px rgba(0, 242, 255, 0.3);
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center;
         }
         
         #p2-name {
-            text-shadow: 0 0 15px rgba(188, 19, 254, 0.5), 0 0 30px rgba(188, 19, 254, 0.2);
+            text-shadow: 0 0 20px rgba(188, 19, 254, 0.6), 0 0 40px rgba(188, 19, 254, 0.3);
         }
 
-        /* 獎牌與排行榜特效 */
+        /* 獎牌與排行榜特效強化 */
         .rank-1 { 
-            background: linear-gradient(90deg, rgba(251, 191, 36, 0.2) 0%, rgba(15, 23, 42, 0.8) 100%) !important; 
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%) !important; 
             border-left: 8px solid var(--gold) !important;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.2);
         }
         .rank-2 { 
-            background: linear-gradient(90deg, rgba(226, 232, 240, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%) !important; 
+            background: linear-gradient(90deg, rgba(226, 232, 240, 0.2) 0%, rgba(15, 23, 42, 0.9) 100%) !important; 
             border-left: 8px solid var(--silver) !important;
+            box-shadow: 0 0 20px rgba(226, 232, 240, 0.1);
         }
         .rank-3 { 
-            background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%) !important; 
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.2) 0%, rgba(15, 23, 42, 0.9) 100%) !important; 
             border-left: 8px solid var(--bronze) !important;
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.1);
         }
 
-        .rank-text-big { font-size: 1.5rem; font-weight: 900; }
+        .rank-text-big { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; }
 
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* 秒數輸入框樣式 */
+        /* 秒數計時器樣式 */
         #timer-input {
             background: transparent;
             border: none;
@@ -70,6 +73,20 @@
             width: 300px;
             outline: none;
             cursor: pointer;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        /* 倒數紅字特效 */
+        .timer-warning {
+            color: var(--neon-red) !important;
+            text-shadow: 0 0 20px rgba(255, 71, 87, 0.8), 0 0 40px rgba(255, 71, 87, 0.4) !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .scanline {
@@ -128,7 +145,7 @@
         <header class="flex justify-between items-end mb-6">
             <div class="flex flex-col">
                 <h1 class="main-title tracking-tighter text-shadow-lg">資優盃光の驅動車大賽</h1>
-                <p class="text-xs text-cyan-500/80 font-bold tech-font tracking-[0.3em]">PREMIUM COMPETITION SYSTEM V5.2</p>
+                <p class="text-xs text-cyan-500/80 font-bold tech-font tracking-[0.3em]">PREMIUM COMPETITION SYSTEM V5.4</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="exportToCloud()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 text-xs font-bold hover:bg-emerald-600/40 transition-all">
@@ -142,7 +159,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- 左側：對戰區 -->
             <div class="lg:col-span-8 space-y-6">
-                <!-- 隊伍管理面板 (預設隱藏) -->
+                <!-- 隊伍管理面板 -->
                 <section id="setup-panel" class="glass-card rounded-2xl p-6 hidden">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xl font-black tech-font text-cyan-400 uppercase">隊伍註冊表</h3>
@@ -162,7 +179,7 @@
                             <input type="number" id="p1-score" placeholder="輸入距離" class="w-full bg-black/50 border border-slate-800 rounded-xl py-3 text-center text-3xl text-cyan-400 font-mono outline-none">
                         </div>
 
-                        <!-- 計時中心 (秒數放大) -->
+                        <!-- 計時中心 (秒數放大 8xl) -->
                         <div class="flex flex-col items-center min-w-[220px]">
                             <input type="number" id="timer-input" value="60" class="text-8xl font-black tech-font text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" onchange="updateCustomTimer(this.value)">
                             <div class="text-xl font-black tech-font text-slate-700 italic tracking-tighter mt-[-10px]">VERSUS</div>
@@ -210,10 +227,10 @@
         // 語音播報功能
         function speak(text) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // 先停止之前的播報
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-TW';
-                utterance.rate = 0.9;
+                utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -248,9 +265,7 @@
         function toggleManage() { document.getElementById('setup-panel').classList.toggle('hidden'); }
         function notify(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity='0', 2500); }
 
-        // UI 渲染
         function updateUI(skipSort = false) {
-            // 隊伍管理
             const list = document.getElementById('team-list');
             list.innerHTML = teams.map((t, idx) => `
                 <div class="p-4 bg-white/5 border border-white/10 rounded-xl relative">
@@ -263,7 +278,6 @@
                 </div>
             `).join('');
 
-            // 排行榜
             const board = document.getElementById('leaderboard');
             const sorted = skipSort ? teams : [...teams].sort((a,b) => b.score - a.score);
             
@@ -297,13 +311,10 @@
             }).join('');
         }
 
-        // 手動編輯與自動重新排序 (5秒)
         function manualScoreEdit(id, val) {
             const scoreVal = val === "" ? 0 : parseFloat(val);
             teams = teams.map(t => t.id === id ? {...t, score: scoreVal, hasRaced: true} : t);
-            
             document.getElementById('sort-warning').style.display = 'block';
-            
             if (sortTimeout) clearTimeout(sortTimeout);
             sortTimeout = setTimeout(() => {
                 document.getElementById('sort-warning').style.display = 'none';
@@ -315,10 +326,8 @@
 
         function announceTopThree() {
             const sorted = [...teams].sort((a,b) => b.score - a.score);
-            let msg = "目前成績統計：";
-            if (sorted[0] && sorted[0].score > 0) msg += `第一名 ${sorted[0].name}。`;
-            if (sorted[1] && sorted[1].score > 0) msg += `第二名 ${sorted[1].name}。`;
-            if (sorted[2] && sorted[2].score > 0) msg += `第三名 ${sorted[2].name}。`;
+            let msg = "目前的排行榜首位是：";
+            if (sorted[0] && sorted[0].score > 0) msg += `${sorted[0].name}，成績 ${sorted[0].score} 公分。`;
             speak(msg);
         }
 
@@ -330,7 +339,6 @@
             exportToCloud();
         }
 
-        // 全場重設
         function fullReset() {
             if(!confirm("確定要【全場重設】嗎？這將清空所有成績並回到初始狀態。")) return;
             teams = Array.from({ length: 10 }, (_, i) => ({ id: Date.now() + i, name: `第 ${i + 1} 隊`, score: 0, hasRaced: false }));
@@ -345,7 +353,6 @@
             notify("🔄 遊戲已完全重設");
         }
 
-        // 抽籤與比賽邏輯
         function drawMatch() {
             const pool = teams.filter(t => !t.hasRaced);
             if (pool.length === 0) return notify("所有隊伍皆已完賽");
@@ -379,9 +386,17 @@
             notify("🏆 紀錄成功，已更新排行榜");
         }
 
-        // 計時器功能
-        function updateCustomTimer(val) { defaultSeconds = parseInt(val) || 60; if (!isRunning) timerVal = defaultSeconds; }
-        function resetTimer() { clearInterval(interval); isRunning = false; timerVal = defaultSeconds; document.getElementById('timer-input').value = timerVal; document.getElementById('timer-btn').innerText = "開始計時"; }
+        function updateCustomTimer(val) { defaultSeconds = parseInt(val) || 60; if (!isRunning) timerVal = defaultSeconds; handleTimerVisual(timerVal); }
+        function resetTimer() { clearInterval(interval); isRunning = false; timerVal = defaultSeconds; document.getElementById('timer-input').value = timerVal; document.getElementById('timer-btn').innerText = "開始計時"; handleTimerVisual(timerVal); }
+
+        function handleTimerVisual(val) {
+            const input = document.getElementById('timer-input');
+            if (val <= 10 && val > 0) {
+                input.classList.add('timer-warning');
+            } else {
+                input.classList.remove('timer-warning');
+            }
+        }
 
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
@@ -392,6 +407,13 @@
                 speak("比賽開始！");
                 interval = setInterval(() => {
                     timerVal--; input.value = timerVal;
+                    handleTimerVisual(timerVal);
+
+                    // 倒數 10 秒語音播報
+                    if (timerVal <= 10 && timerVal > 0) {
+                        speak(timerVal.toString());
+                    }
+
                     if (timerVal <= 0) { 
                         clearInterval(interval); 
                         isRunning = false; 
