@@ -11,6 +11,7 @@
         
         :root {
             --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
             --gold: #fbbf24;
             --silver: #94a3b8;
             --bronze: #b45309;
@@ -27,6 +28,37 @@
         .tech-font { font-family: 'Orbitron', sans-serif; }
         .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
+        /* 隊名強化特效 */
+        .team-display-name {
+            font-size: 4.5rem; /* 大字體 */
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .neon-text-blue {
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 40px var(--neon-blue);
+            animation: neon-pulse-blue 2s infinite alternate;
+        }
+
+        .neon-text-purple {
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple), 0 0 40px var(--neon-purple);
+            animation: neon-pulse-purple 2s infinite alternate;
+        }
+
+        @keyframes neon-pulse-blue {
+            from { text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue); }
+            to { text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue), 0 0 50px var(--neon-blue); }
+        }
+
+        @keyframes neon-pulse-purple {
+            from { text-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple); }
+            to { text-shadow: 0 0 15px var(--neon-purple), 0 0 30px var(--neon-purple), 0 0 50px var(--neon-purple); }
+        }
+
         /* 獎牌呼吸燈特效 */
         .rank-gold { 
             background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important; 
@@ -63,7 +95,6 @@
         }
         #timer-input:focus { color: var(--neon-blue); }
 
-        /* 掃描線特效 */
         .scanline {
             width: 100%;
             height: 2px;
@@ -138,30 +169,34 @@
                 <section class="glass-card rounded-[2.5rem] p-10 border-l-[10px] border-cyan-500 shadow-2xl relative overflow-hidden">
                     <div class="scanline"></div>
                     <div class="grid grid-cols-1 md:grid-cols-11 gap-6 items-center mb-12">
-                        <div class="md:col-span-5 p-8 rounded-3xl bg-slate-900/80 border border-white/5 text-center shadow-inner">
-                            <div class="text-[10px] text-cyan-500 tech-font mb-2 tracking-widest uppercase">Pilot Alpha</div>
-                            <div id="p1-name" class="text-4xl font-black text-white mb-6 h-12 flex items-center justify-center tracking-tight">---</div>
-                            <input type="number" id="p1-score" placeholder="距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-2xl py-4 px-4 text-center text-4xl text-cyan-400 font-mono focus:border-cyan-500 outline-none transition-all shadow-lg">
+                        <!-- P1 -->
+                        <div class="md:col-span-5 p-8 rounded-3xl bg-slate-900/80 border border-white/5 text-center shadow-inner relative overflow-hidden">
+                            <div class="text-[10px] text-cyan-500 tech-font mb-4 tracking-widest uppercase">Pilot Alpha</div>
+                            <div id="p1-name" class="team-display-name neon-text-blue mb-10 h-32 flex items-center justify-center">---</div>
+                            <input type="number" id="p1-score" placeholder="距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-2xl py-6 px-4 text-center text-5xl text-cyan-400 font-mono focus:border-cyan-500 outline-none transition-all shadow-lg">
                         </div>
-                        <div class="md:col-span-1 text-center text-3xl font-black tech-font text-slate-800">VS</div>
-                        <div class="md:col-span-5 p-8 rounded-3xl bg-slate-900/80 border border-white/5 text-center shadow-inner">
-                            <div class="text-[10px] text-purple-500 tech-font mb-2 tracking-widest uppercase">Pilot Bravo</div>
-                            <div id="p2-name" class="text-4xl font-black text-white mb-6 h-12 flex items-center justify-center tracking-tight">---</div>
-                            <input type="number" id="p2-score" placeholder="距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-2xl py-4 px-4 text-center text-4xl text-purple-400 font-mono focus:border-purple-500 outline-none transition-all shadow-lg">
+                        
+                        <div class="md:col-span-1 text-center text-4xl font-black tech-font text-slate-700 italic">VS</div>
+                        
+                        <!-- P2 -->
+                        <div class="md:col-span-5 p-8 rounded-3xl bg-slate-900/80 border border-white/5 text-center shadow-inner relative overflow-hidden">
+                            <div class="text-[10px] text-purple-500 tech-font mb-4 tracking-widest uppercase">Pilot Bravo</div>
+                            <div id="p2-name" class="team-display-name neon-text-purple mb-10 h-32 flex items-center justify-center">---</div>
+                            <input type="number" id="p2-score" placeholder="距離 (cm)" class="w-full bg-black/50 border border-slate-800 rounded-2xl py-6 px-4 text-center text-5xl text-purple-400 font-mono focus:border-purple-500 outline-none transition-all shadow-lg">
                         </div>
                     </div>
 
-                    <div class="flex flex-col items-center">
-                        <div class="flex flex-col items-center mb-10 relative">
-                            <input type="number" id="timer-input" value="60" class="text-9xl font-black tech-font tracking-tighter text-white bg-transparent outline-none" onchange="updateCustomTimer(this.value)">
-                            <p class="text-[10px] text-cyan-500/40 uppercase tech-font mt-2 tracking-[0.3em]">Click to set duration</p>
+                    <div class="flex flex-col items-center pt-6">
+                        <div class="flex flex-col items-center mb-12 relative">
+                            <input type="number" id="timer-input" value="60" class="text-[10rem] leading-none font-black tech-font tracking-tighter text-white bg-transparent outline-none" onchange="updateCustomTimer(this.value)">
+                            <p class="text-xs text-cyan-500/40 uppercase tech-font mt-4 tracking-[0.5em]">System Countdown Duration</p>
                         </div>
                         
-                        <div class="flex flex-wrap justify-center gap-5">
-                            <button onclick="drawMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-5 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-900/40 text-lg">隨機抽籤</button>
-                            <button id="timer-btn" onclick="toggleTimer()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-14 py-5 rounded-2xl font-bold transition-all shadow-lg shadow-cyan-900/40 text-lg">開始計時</button>
-                            <button onclick="resetTimer()" class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-5 rounded-2xl font-bold transition-all text-lg">重設</button>
-                            <button onclick="saveMatch()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-5 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-900/40 text-lg">紀錄成績</button>
+                        <div class="flex flex-wrap justify-center gap-6">
+                            <button onclick="drawMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-6 rounded-2xl font-black transition-all shadow-lg shadow-indigo-900/40 text-xl transform hover:scale-105 active:scale-95">隨機抽籤</button>
+                            <button id="timer-btn" onclick="toggleTimer()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-16 py-6 rounded-2xl font-black transition-all shadow-lg shadow-cyan-900/40 text-xl transform hover:scale-105 active:scale-95">開始計時</button>
+                            <button onclick="resetTimer()" class="bg-slate-700 hover:bg-slate-600 text-white px-10 py-6 rounded-2xl font-black transition-all text-xl">重設</button>
+                            <button onclick="saveMatch()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-12 py-6 rounded-2xl font-black transition-all shadow-lg shadow-emerald-900/40 text-xl transform hover:scale-105 active:scale-95">紀錄成績</button>
                         </div>
                     </div>
                 </section>
@@ -305,8 +340,23 @@
             p1Data = pool.splice(Math.floor(Math.random()*pool.length), 1)[0];
             p2Data = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : null;
             
-            document.getElementById('p1-name').innerText = p1Data.name;
-            document.getElementById('p2-name').innerText = p2Data ? p2Data.name : "測試選手";
+            // 加入淡入與縮放效果
+            const p1El = document.getElementById('p1-name');
+            const p2El = document.getElementById('p2-name');
+            
+            p1El.style.transform = "scale(0.8)";
+            p1El.style.opacity = "0";
+            p2El.style.transform = "scale(0.8)";
+            p2El.style.opacity = "0";
+            
+            setTimeout(() => {
+                p1El.innerText = p1Data.name;
+                p2El.innerText = p2Data ? p2Data.name : "測試選手";
+                p1El.style.transform = "scale(1)";
+                p1El.style.opacity = "1";
+                p2El.style.transform = "scale(1)";
+                p2El.style.opacity = "1";
+            }, 100);
             
             speak(`下一場比賽，由 ${p1Data.name} 對戰 ${p2Data ? p2Data.name : '測試選手'}`);
             resetTimer();
@@ -343,7 +393,7 @@
             document.getElementById('timer-input').value = timerVal;
             const btn = document.getElementById('timer-btn');
             btn.innerText = "開始計時";
-            btn.className = "bg-cyan-600 hover:bg-cyan-500 text-white px-14 py-5 rounded-2xl font-bold transition-all shadow-lg shadow-cyan-900/40 text-lg";
+            btn.className = "bg-cyan-600 hover:bg-cyan-500 text-white px-16 py-6 rounded-2xl font-black transition-all shadow-lg shadow-cyan-900/40 text-xl transform hover:scale-105 active:scale-95";
         }
 
         function toggleTimer() {
