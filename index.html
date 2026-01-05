@@ -34,9 +34,9 @@
 
         .neon-border-blue { border-left: 4px solid var(--neon-blue); box-shadow: -5px 0 15px rgba(0, 242, 255, 0.2); }
         
-        /* 加強字體光暈 */
-        .glow-text { text-shadow: 0 0 20px rgba(0, 242, 255, 0.8), 0 0 40px rgba(0, 242, 255, 0.4); }
-        .glow-text-pink { text-shadow: 0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.4); }
+        /* 超強光暈效果 */
+        .glow-text { text-shadow: 0 0 15px rgba(0, 242, 255, 0.9), 0 0 30px rgba(0, 242, 255, 0.6), 0 0 60px rgba(0, 242, 255, 0.3); }
+        .glow-text-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.9), 0 0 30px rgba(255, 0, 255, 0.6), 0 0 60px rgba(255, 0, 255, 0.3); }
 
         .timer-circle {
             transition: stroke-dashoffset 0.1s linear;
@@ -44,7 +44,7 @@
 
         /* 滾動動畫效果優化 */
         .slot-machine {
-            height: 5rem; /* 增加高度以容納更大的字 */
+            height: 7rem; /* 再次增加高度以容納更大的字體 */
             overflow: hidden;
             position: relative;
             display: flex;
@@ -53,12 +53,12 @@
         }
         .slot-container {
             transition: transform 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1);
-            line-height: 5rem;
+            line-height: 7rem;
         }
         .shuffling {
-            filter: blur(4px);
-            opacity: 0.6;
-            transform: scale(0.9);
+            filter: blur(8px);
+            opacity: 0.5;
+            transform: scale(0.85);
         }
 
         .rank-row:nth-child(1) { background: rgba(251, 191, 36, 0.1); border-left: 4px solid #fbbf24; }
@@ -93,11 +93,20 @@
             100% { top: 100%; }
         }
 
-        /* 隊名震撼放大效果 */
+        /* 隊名極限放大效果 */
         .team-name-display {
-            font-size: 3.5rem; /* 大幅增加隊名大小 */
+            font-size: 5rem; /* 提升至 5rem，極具衝擊力 */
             font-weight: 900;
             letter-spacing: -0.05em;
+            line-height: 1;
+        }
+
+        /* 自定義時間按鈕樣式 */
+        .time-btn {
+            @apply px-3 py-1 rounded bg-slate-800 border border-slate-700 text-xs font-bold hover:bg-cyan-900/40 hover:border-cyan-500/50 transition-all;
+        }
+        .time-btn.active {
+            @apply bg-cyan-600 border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.5)];
         }
     </style>
 </head>
@@ -155,37 +164,37 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center mb-12">
                         <!-- Player A -->
-                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-cyan-500/40 relative overflow-hidden group">
+                        <div class="md:col-span-5 text-center p-8 rounded-2xl bg-slate-900/90 border border-cyan-500/40 relative overflow-hidden group min-h-[16rem] flex flex-col justify-center">
                             <div class="absolute -inset-1 bg-gradient-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <span class="text-xs tracking-widest text-cyan-500 tech-font block mb-2 uppercase font-bold">Pilot A</span>
-                            <div class="slot-machine mb-4">
+                            <span class="text-xs tracking-widest text-cyan-500 tech-font block mb-4 uppercase font-bold">Pilot A</span>
+                            <div class="slot-machine mb-6">
                                 <div id="p1-slot" class="slot-container team-name-display text-white glow-text">---</div>
                             </div>
                             <div class="relative z-10">
                                 <input type="number" id="p1-score-input" placeholder="距離 (cm)" 
-                                    class="w-full bg-black/70 border border-slate-700 rounded-xl py-4 px-4 text-center text-2xl focus:border-cyan-500 focus:outline-none transition-all text-cyan-400 font-mono">
+                                    class="w-full bg-black/70 border border-slate-700 rounded-xl py-4 px-4 text-center text-3xl focus:border-cyan-500 focus:outline-none transition-all text-cyan-400 font-mono">
                             </div>
                         </div>
 
-                        <div class="md:col-span-1 text-center font-black tech-font text-5xl text-slate-800 italic animate-pulse">VS</div>
+                        <div class="md:col-span-1 text-center font-black tech-font text-6xl text-slate-800 italic animate-pulse">VS</div>
 
                         <!-- Player B -->
-                        <div class="md:col-span-5 text-center p-6 rounded-2xl bg-slate-900/90 border border-purple-500/40 relative overflow-hidden group">
+                        <div class="md:col-span-5 text-center p-8 rounded-2xl bg-slate-900/90 border border-purple-500/40 relative overflow-hidden group min-h-[16rem] flex flex-col justify-center">
                             <div class="absolute -inset-1 bg-gradient-to-b from-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <span class="text-xs tracking-widest text-purple-500 tech-font block mb-2 uppercase font-bold">Pilot B</span>
-                            <div class="slot-machine mb-4">
+                            <span class="text-xs tracking-widest text-purple-500 tech-font block mb-4 uppercase font-bold">Pilot B</span>
+                            <div class="slot-machine mb-6">
                                 <div id="p2-slot" class="slot-container team-name-display text-white glow-text-pink">---</div>
                             </div>
                             <div class="relative z-10">
                                 <input type="number" id="p2-score-input" placeholder="距離 (cm)" 
-                                    class="w-full bg-black/70 border border-slate-700 rounded-xl py-4 px-4 text-center text-2xl focus:border-purple-500 focus:outline-none transition-all text-purple-400 font-mono">
+                                    class="w-full bg-black/70 border border-slate-700 rounded-xl py-4 px-4 text-center text-3xl focus:border-purple-500 focus:outline-none transition-all text-purple-400 font-mono">
                             </div>
                         </div>
                     </div>
 
                     <!-- 計時器與控制 -->
                     <div class="flex flex-col items-center">
-                        <div class="relative mb-8">
+                        <div class="relative mb-4">
                             <svg class="w-44 h-44 transform -rotate-90">
                                 <circle cx="88" cy="88" r="82" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-800" />
                                 <circle id="timer-bar" cx="88" cy="88" r="82" stroke="currentColor" stroke-width="8" fill="transparent" 
@@ -194,6 +203,18 @@
                             <div id="timer-display" class="absolute inset-0 flex flex-col items-center justify-center">
                                 <span class="text-5xl font-bold tech-font tracking-tighter" id="seconds-text">60</span>
                                 <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">System Time</span>
+                            </div>
+                        </div>
+
+                        <!-- 時間設定區域 -->
+                        <div class="flex items-center gap-2 mb-8 bg-black/30 p-2 rounded-xl border border-white/5">
+                            <button onclick="setBaseTime(30)" class="time-btn" id="t-30">30s</button>
+                            <button onclick="setBaseTime(60)" class="time-btn active" id="t-60">60s</button>
+                            <button onclick="setBaseTime(90)" class="time-btn" id="t-90">90s</button>
+                            <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
+                            <div class="flex items-center">
+                                <input type="number" id="custom-time-input" placeholder="自訂" class="w-14 bg-transparent border-b border-slate-600 text-center text-xs focus:outline-none focus:border-cyan-500 text-cyan-400 font-bold">
+                                <button onclick="setCustomTime()" class="ml-2 text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300">設定</button>
                             </div>
                         </div>
 
@@ -258,7 +279,8 @@
 
         let currentP1 = null;
         let currentP2 = null;
-        let timerSeconds = 60;
+        let baseSeconds = 60; // 基礎設定時間
+        let timerSeconds = 60; // 目前剩餘時間
         let timerRunning = false;
         let timerInterval = null;
         let isDrawing = false;
@@ -326,7 +348,32 @@
             updateLeaderboard();
         }
 
-        // 抽籤邏輯 - 刺激動畫版 (隊名顯示更震撼)
+        // 時間設定相關
+        function setBaseTime(s) {
+            if (timerRunning) return;
+            baseSeconds = s;
+            resetTimer();
+            
+            // 更新 UI 狀態
+            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`t-${s}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            notify(`比賽時間設定為 ${s} 秒`);
+        }
+
+        function setCustomTime() {
+            if (timerRunning) return;
+            const custom = parseInt(document.getElementById('custom-time-input').value);
+            if (custom > 0 && custom <= 999) {
+                setBaseTime(custom);
+                document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            } else {
+                notify("請輸入有效的秒數 (1-999)");
+            }
+        }
+
+        // 抽籤邏輯
         async function drawMatch() {
             if (timerRunning || isDrawing) return;
             isDrawing = true;
@@ -346,7 +393,7 @@
             const tempP2 = availableTeams[p2Idx];
 
             let count = 0;
-            const maxCycles = 25; // 稍微增加滾動時間增加緊張感
+            const maxCycles = 30; // 增加滾動次數提升緊張感
             const interval = setInterval(() => {
                 p1Slot.innerText = teams[Math.floor(Math.random() * teams.length)].name;
                 p2Slot.innerText = teams[Math.floor(Math.random() * teams.length)].name;
@@ -361,13 +408,13 @@
                     p1Slot.classList.remove('shuffling');
                     p2Slot.classList.remove('shuffling');
                     
-                    // 鎖定結果時增加一點縮放效果
-                    p1Slot.style.transform = "scale(1.1)";
-                    p2Slot.style.transform = "scale(1.1)";
+                    // 結束時的視覺反彈效果
+                    p1Slot.style.transform = "scale(1.15)";
+                    p2Slot.style.transform = "scale(1.15)";
                     setTimeout(() => {
                         p1Slot.style.transform = "scale(1)";
                         p2Slot.style.transform = "scale(1)";
-                    }, 200);
+                    }, 300);
 
                     currentP1 = tempP1;
                     currentP2 = tempP2;
@@ -381,7 +428,7 @@
                     
                     notify(`對決開始：${currentP1.name} VS ${currentP2.name}`);
                 }
-            }, 70);
+            }, 60);
         }
 
         function toggleTimer() {
@@ -414,7 +461,7 @@
 
         function resetTimer() {
             stopTimer();
-            timerSeconds = 60;
+            timerSeconds = baseSeconds;
             updateTimerDisplay();
             document.getElementById('timer-control-btn').innerText = "開始計時";
         }
@@ -422,7 +469,7 @@
         function updateTimerDisplay() {
             document.getElementById('seconds-text').innerText = timerSeconds;
             const bar = document.getElementById('timer-bar');
-            const offset = 515 - (timerSeconds / 60) * 515;
+            const offset = 515 - (timerSeconds / baseSeconds) * 515;
             bar.style.strokeDashoffset = offset;
         }
 
