@@ -13,6 +13,7 @@
             --neon-green: #39ff14;
             --neon-purple: #bc13fe;
             --neon-pink: #ff00ff;
+            --neon-red: #ff3131;
         }
 
         body {
@@ -21,6 +22,11 @@
             background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #050a14 100%);
             color: #e2e8f0;
             overflow-x: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        body.timer-warning {
+            background-color: #1a0505;
         }
 
         .tech-font { font-family: 'Orbitron', sans-serif; }
@@ -36,9 +42,10 @@
         
         .glow-text { text-shadow: 0 0 15px rgba(0, 242, 255, 0.7); }
         .glow-text-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.7); }
+        .glow-text-red { text-shadow: 0 0 15px rgba(255, 49, 49, 0.7); }
 
         .timer-circle {
-            transition: stroke-dashoffset 0.1s linear;
+            transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
         }
 
         /* 滾動動畫效果優化 */
@@ -94,7 +101,7 @@
 
         /* 隊名平衡大小 */
         .team-name-display {
-            font-size: 3.5rem; /* 調回適中的 3.5rem */
+            font-size: 3.5rem; 
             font-weight: 800;
             letter-spacing: -0.02em;
             line-height: 1.2;
@@ -106,6 +113,16 @@
         }
         .time-btn.active {
             @apply bg-cyan-600 border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.5)];
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
     </style>
 </head>
@@ -191,7 +208,7 @@
 
                     <!-- 計時器與控制 -->
                     <div class="flex flex-col items-center">
-                        <div class="relative mb-2">
+                        <div class="relative mb-2" id="timer-container">
                             <svg class="w-40 h-40 transform -rotate-90">
                                 <circle cx="80" cy="80" r="74" stroke="currentColor" stroke-width="6" fill="transparent" class="text-slate-800" />
                                 <circle id="timer-bar" cx="80" cy="80" r="74" stroke="currentColor" stroke-width="6" fill="transparent" 
@@ -259,6 +276,80 @@
     </div>
 
     <script>
+        // 音效管理器
+        const SFX = {
+            audioCtx: null,
+            init() {
+                if (!this.audioCtx) {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            play(type) {
+                this.init();
+                const ctx = this.audioCtx;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                switch(type) {
+                    case 'click':
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(800, now);
+                        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                        osc.start(); osc.stop(now + 0.1);
+                        break;
+                    case 'draw':
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(150, now);
+                        osc.frequency.linearRampToValueAtTime(400, now + 0.05);
+                        gain.gain.setValueAtTime(0.05, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                        osc.start(); osc.stop(now + 0.05);
+                        break;
+                    case 'tick':
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(600, now);
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                        osc.start(); osc.stop(now + 0.05);
+                        break;
+                    case 'warning':
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(1200, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 0.08);
+                        osc.start(); osc.stop(now + 0.08);
+                        break;
+                    case 'alarm':
+                        // 雙頻報警聲
+                        const osc2 = ctx.createOscillator();
+                        osc2.type = 'sawtooth';
+                        osc2.frequency.setValueAtTime(200, now);
+                        osc2.connect(gain);
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(300, now);
+                        gain.gain.setValueAtTime(0.3, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 1);
+                        osc.start(); osc.stop(now + 1);
+                        osc2.start(); osc2.stop(now + 1);
+                        break;
+                    case 'save':
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(400, now);
+                        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                        osc.start(); osc.stop(now + 0.3);
+                        break;
+                }
+            }
+        };
+
         // 狀態管理
         let teams = [
             { id: 1, name: "光子旋風", score: 0 }, { id: 2, name: "雷射之眼", score: 0 },
@@ -297,28 +388,37 @@
         }
 
         function addTeam() {
+            SFX.play('click');
             const newId = Date.now();
             teams.push({ id: newId, name: `新隊伍 ${teams.length + 1}`, score: 0 });
             renderTeamInputs();
         }
 
         function removeTeam(id) {
+            SFX.play('click');
             if (teams.length <= 2) return notify("至少需保留 2 個隊伍");
             teams = teams.filter(t => t.id !== id);
             renderTeamInputs();
         }
 
         function toggleManageMode() {
+            SFX.play('click');
             const panel = document.getElementById('setup-panel');
             const btn = document.getElementById('manage-toggle-btn');
             panel.classList.toggle('hidden');
             btn.innerText = panel.classList.contains('hidden') ? "管理隊伍名單" : "關閉管理視窗";
         }
 
-        function lockAndStart() { toggleManageMode(); notify("名單已鎖定"); updateLeaderboard(); }
+        function lockAndStart() { 
+            SFX.play('save');
+            toggleManageMode(); 
+            notify("名單已鎖定"); 
+            updateLeaderboard(); 
+        }
 
         function setBaseTime(s) {
             if (timerRunning) return;
+            SFX.play('click');
             baseSeconds = s; resetTimer();
             document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
             if (document.getElementById(`t-${s}`)) document.getElementById(`t-${s}`).classList.add('active');
@@ -342,6 +442,7 @@
 
             let count = 0;
             const interval = setInterval(() => {
+                SFX.play('draw');
                 p1Slot.innerText = teams[Math.floor(Math.random()*teams.length)].name;
                 p2Slot.innerText = teams[Math.floor(Math.random()*teams.length)].name;
                 p1Slot.classList.add('shuffling'); p2Slot.classList.add('shuffling');
@@ -351,28 +452,82 @@
                     p1Slot.classList.remove('shuffling'); p2Slot.classList.remove('shuffling');
                     currentP1 = p1; currentP2 = p2;
                     isDrawing = false;
+                    SFX.play('save');
                 }
             }, 70);
         }
 
-        function toggleTimer() { timerRunning ? stopTimer() : startTimer(); }
+        function toggleTimer() { 
+            SFX.play('click');
+            timerRunning ? stopTimer() : startTimer(); 
+        }
+
         function startTimer() {
             timerRunning = true;
             document.getElementById('timer-control-btn').innerText = "暫停";
             timerInterval = setInterval(() => {
-                if (--timerSeconds <= 0) { stopTimer(); notify("時間到！"); }
+                timerSeconds--;
+                
+                // 倒數音效邏輯
+                if (timerSeconds > 0) {
+                    if (timerSeconds <= 3) {
+                        SFX.play('warning'); // 最後三秒重音
+                    } else if (timerSeconds <= 10) {
+                        SFX.play('tick'); // 最後十秒滴答
+                    }
+                }
+
+                if (timerSeconds <= 0) { 
+                    stopTimer(); 
+                    timerSeconds = 0;
+                    handleTimerEnd();
+                }
                 updateTimerDisplay();
             }, 1000);
         }
+
+        function handleTimerEnd() {
+            SFX.play('alarm');
+            notify("時間到！");
+            document.body.classList.add('timer-warning');
+            document.getElementById('timer-container').classList.add('shake');
+            document.getElementById('timer-bar').classList.replace('text-cyan-500', 'text-red-500');
+            document.getElementById('seconds-text').classList.add('text-red-500', 'glow-text-red');
+            
+            setTimeout(() => {
+                document.getElementById('timer-container').classList.remove('shake');
+            }, 1000);
+        }
+
         function stopTimer() { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-control-btn').innerText = "繼續計時"; }
-        function resetTimer() { stopTimer(); timerSeconds = baseSeconds; updateTimerDisplay(); document.getElementById('timer-control-btn').innerText = "開始計時"; }
+
+        function resetTimer() { 
+            stopTimer(); 
+            timerSeconds = baseSeconds; 
+            document.body.classList.remove('timer-warning');
+            document.getElementById('timer-bar').classList.replace('text-red-500', 'text-cyan-500');
+            document.getElementById('seconds-text').classList.remove('text-red-500', 'glow-text-red');
+            updateTimerDisplay(); 
+            document.getElementById('timer-control-btn').innerText = "開始計時"; 
+        }
+
         function updateTimerDisplay() {
             document.getElementById('seconds-text').innerText = timerSeconds;
             document.getElementById('timer-bar').style.strokeDashoffset = 465 - (timerSeconds / baseSeconds) * 465;
+            
+            // 最後 10 秒變紅預警
+            if (timerSeconds <= 10 && timerSeconds > 0) {
+                document.getElementById('timer-bar').style.stroke = 'var(--neon-red)';
+                document.body.classList.add('timer-warning');
+            } else if (timerSeconds > 10) {
+                document.getElementById('timer-bar').style.stroke = '';
+                document.body.classList.remove('timer-warning');
+            }
         }
 
         function saveMatchResult() {
             if (!currentP1) return notify("請先抽籤");
+            SFX.play('save');
             const s1 = parseFloat(document.getElementById('p1-score-input').value) || 0;
             const s2 = parseFloat(document.getElementById('p2-score-input').value) || 0;
             teams = teams.map(t => {
@@ -381,6 +536,8 @@
                 return t;
             });
             updateLeaderboard(); notify("成績已儲存"); resetTimer();
+            document.getElementById('p1-score-input').value = '';
+            document.getElementById('p2-score-input').value = '';
         }
 
         function updateLeaderboard() {
