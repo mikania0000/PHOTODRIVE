@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>資優盃光驅動車大賽 - 科技管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap');
         
@@ -14,6 +15,9 @@
             --neon-purple: #bc13fe;
             --neon-pink: #ff00ff;
             --neon-red: #ff3131;
+            --gold: #fbbf24;
+            --silver: #94a3b8;
+            --bronze: #b45309;
         }
 
         body {
@@ -44,6 +48,31 @@
         .glow-text-pink { text-shadow: 0 0 15px rgba(255, 0, 255, 0.7); }
         .glow-text-red { text-shadow: 0 0 15px rgba(255, 49, 49, 0.7); }
 
+        /* 前三名特效 */
+        .rank-gold { 
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+            border-left: 4px solid var(--gold) !important;
+            box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
+            animation: gold-pulse 3s infinite ease-in-out;
+        }
+        .rank-silver { 
+            background: linear-gradient(90deg, rgba(148, 163, 184, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+            border-left: 4px solid var(--silver) !important;
+        }
+        .rank-bronze { 
+            background: linear-gradient(90deg, rgba(180, 83, 9, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+            border-left: 4px solid var(--bronze) !important;
+        }
+
+        @keyframes gold-pulse {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1); }
+            50% { box-shadow: inset 0 0 40px rgba(251, 191, 36, 0.25); }
+        }
+
+        .medal-icon {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
         .timer-circle {
             transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
         }
@@ -65,10 +94,6 @@
             opacity: 0.6;
             transform: scale(0.9);
         }
-
-        .rank-row:nth-child(1) { background: rgba(251, 191, 36, 0.1); border-left: 4px solid #fbbf24; }
-        .rank-row:nth-child(2) { background: rgba(148, 163, 184, 0.1); border-left: 4px solid #94a3b8; }
-        .rank-row:nth-child(3) { background: rgba(180, 83, 9, 0.1); border-left: 4px solid #b45309; }
 
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -276,7 +301,7 @@
         </main>
     </div>
 
-    <!-- 自定義對話框 (用於修改成績) -->
+    <!-- 修改成績視窗 -->
     <div id="edit-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
         <div class="modal-overlay absolute inset-0" onclick="closeEditModal()"></div>
         <div class="glass-card relative z-10 w-80 p-6 rounded-2xl border border-cyan-500/50 shadow-[0_0_50px_rgba(6,182,212,0.3)]">
@@ -290,7 +315,6 @@
         </div>
     </div>
 
-    <!-- 通知元件 -->
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-cyan-500/50 text-cyan-100 px-8 py-3 rounded-full shadow-2xl opacity-0 transition-all z-50 pointer-events-none font-bold">
         系統訊息
     </div>
@@ -306,14 +330,10 @@
                 }
             },
             speak(text) {
-                // 停止之前的語音，確保新的能播
-                if (this.synth.speaking) {
-                    this.synth.cancel();
-                }
+                if (this.synth.speaking) this.synth.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-TW';
-                utterance.rate = 1.1; // 稍微快一點點，更有緊張感
-                utterance.pitch = 1.0;
+                utterance.rate = 1.1;
                 this.synth.speak(utterance);
             },
             play(type) {
@@ -336,7 +356,6 @@
                     case 'draw':
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(150, now);
-                        osc.frequency.linearRampToValueAtTime(400, now + 0.05);
                         gain.gain.setValueAtTime(0.05, now);
                         gain.gain.linearRampToValueAtTime(0, now + 0.05);
                         osc.start(); osc.stop(now + 0.05);
@@ -348,24 +367,12 @@
                         gain.gain.linearRampToValueAtTime(0, now + 0.05);
                         osc.start(); osc.stop(now + 0.05);
                         break;
-                    case 'warning':
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(1200, now);
-                        gain.gain.setValueAtTime(0.2, now);
-                        gain.gain.linearRampToValueAtTime(0, now + 0.08);
-                        osc.start(); osc.stop(now + 0.08);
-                        break;
                     case 'alarm':
-                        const osc2 = ctx.createOscillator();
-                        osc2.type = 'sawtooth';
-                        osc2.frequency.setValueAtTime(200, now);
-                        osc2.connect(gain);
                         osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(300, now);
+                        osc.frequency.setValueAtTime(200, now);
                         gain.gain.setValueAtTime(0.3, now);
                         gain.gain.linearRampToValueAtTime(0, now + 1);
                         osc.start(); osc.stop(now + 1);
-                        osc2.start(); osc2.stop(now + 1);
                         break;
                     case 'save':
                         osc.type = 'triangle';
@@ -460,7 +467,6 @@
             baseSeconds = s; resetTimer();
             document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
             if (document.getElementById(`t-${s}`)) document.getElementById(`t-${s}`).classList.add('active');
-            notify(`時間：${s} 秒`);
         }
 
         function setCustomTime() {
@@ -506,33 +512,19 @@
         }
 
         function startTimer() {
-            // 如果是剛開始（從基礎時間啟動），播報比賽開始
-            if (timerSeconds === baseSeconds) {
-                SFX.speak("比賽開始");
-            }
-            
+            if (timerSeconds === baseSeconds) SFX.speak("比賽開始");
             timerRunning = true;
             document.getElementById('timer-control-btn').innerText = "暫停";
             timerInterval = setInterval(() => {
                 timerSeconds--;
-                
-                // 處理倒數與音效
-                if (timerSeconds === 10) {
-                    SFX.speak("最後十秒倒數");
-                } else if (timerSeconds < 10 && timerSeconds > 0) {
+                if (timerSeconds === 10) SFX.speak("最後十秒倒數");
+                else if (timerSeconds < 10 && timerSeconds > 0) {
                     SFX.play('tick');
                     SFX.speak(timerSeconds.toString());
                 } else if (timerSeconds === 0) {
                     handleTimerEnd();
-                } else if (timerSeconds > 10) {
-                    // 一般滴答聲
-                    if (timerSeconds % 10 === 0) SFX.play('tick');
                 }
-
-                if (timerSeconds <= 0) { 
-                    stopTimer(); 
-                    timerSeconds = 0;
-                }
+                if (timerSeconds <= 0) { stopTimer(); timerSeconds = 0; }
                 updateTimerDisplay();
             }, 1000);
         }
@@ -545,9 +537,7 @@
             document.getElementById('timer-container').classList.add('shake');
             document.getElementById('timer-bar').classList.replace('text-cyan-500', 'text-red-500');
             document.getElementById('seconds-text').classList.add('text-red-500', 'glow-text-red');
-            setTimeout(() => {
-                document.getElementById('timer-container').classList.remove('shake');
-            }, 1000);
+            setTimeout(() => document.getElementById('timer-container').classList.remove('shake'), 1000);
         }
 
         function stopTimer() { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-control-btn').innerText = "繼續計時"; }
@@ -565,13 +555,6 @@
         function updateTimerDisplay() {
             document.getElementById('seconds-text').innerText = timerSeconds;
             document.getElementById('timer-bar').style.strokeDashoffset = 465 - (timerSeconds / baseSeconds) * 465;
-            if (timerSeconds <= 10 && timerSeconds > 0) {
-                document.getElementById('timer-bar').style.stroke = 'var(--neon-red)';
-                document.body.classList.add('timer-warning');
-            } else if (timerSeconds > 10) {
-                document.getElementById('timer-bar').style.stroke = '';
-                document.body.classList.remove('timer-warning');
-            }
         }
 
         function saveMatchResult() {
@@ -580,24 +563,34 @@
             const s1 = parseFloat(document.getElementById('p1-score-input').value) || 0;
             const s2 = parseFloat(document.getElementById('p2-score-input').value) || 0;
             
+            const prevTopIds = [...teams].sort((a,b) => b.score - a.score).slice(0, 3).map(t => t.id);
+
             teams = teams.map(t => {
-                if (t.id === currentP1.id) {
-                    t.score = Math.max(t.score, s1);
-                    t.hasRaced = true;
-                }
-                if (currentP2 && t.id === currentP2.id) {
-                    t.score = Math.max(t.score, s2);
-                    t.hasRaced = true;
-                }
+                if (t.id === currentP1.id) { t.score = Math.max(t.score, s1); t.hasRaced = true; }
+                if (currentP2 && t.id === currentP2.id) { t.score = Math.max(t.score, s2); t.hasRaced = true; }
                 return t;
             });
             
+            const newSorted = [...teams].sort((a,b) => b.score - a.score);
+            const newTopIds = newSorted.slice(0, 3).map(t => t.id);
+
+            // 如果有人新進入前三名，放煙火
+            const enteredTop3 = newTopIds.some(id => !prevTopIds.includes(id) && teams.find(t => t.id === id).score > 0);
+            if (enteredTop3) {
+                fireConfetti();
+                SFX.speak("恭喜進入前三名！");
+            }
+
             updateLeaderboard(); notify("成績已儲存"); resetTimer();
             document.getElementById('p1-score-input').value = '';
             document.getElementById('p2-score-input').value = '';
             currentP1 = null; currentP2 = null;
             document.getElementById('p1-slot').innerText = "---";
             document.getElementById('p2-slot').innerText = "---";
+        }
+
+        function fireConfetti() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f2ff', '#fbbf24', '#ff00ff'] });
         }
 
         function updateLeaderboard() {
@@ -608,10 +601,29 @@
             document.getElementById('match-progress').innerText = `${racedCount}/${teams.length} RACED`;
             document.getElementById('no-data').classList.toggle('hidden', true);
             
-            list.innerHTML = sorted.map((t, i) => `
-                <div onclick="openEditModal(${t.id})" class="rank-row flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-all group">
+            list.innerHTML = sorted.map((t, i) => {
+                let rankClass = "";
+                let medalIcon = "";
+                
+                if (t.score > 0) {
+                    if (i === 0) {
+                        rankClass = "rank-gold";
+                        medalIcon = `<svg class="medal-icon text-yellow-400 w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/></svg>`;
+                    } else if (i === 1) {
+                        rankClass = "rank-silver";
+                        medalIcon = `<svg class="medal-icon text-slate-400 w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/></svg>`;
+                    } else if (i === 2) {
+                        rankClass = "rank-bronze";
+                        medalIcon = `<svg class="medal-icon text-orange-700 w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/></svg>`;
+                    }
+                }
+
+                return `
+                <div onclick="openEditModal(${t.id})" class="rank-row flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-all group ${rankClass}">
                     <div class="flex items-center gap-4">
-                        <span class="tech-font font-black text-xl w-6 ${i<3?'text-yellow-400':'text-slate-500'}">${i+1}</span>
+                        <div class="relative flex items-center justify-center w-8">
+                            ${medalIcon || `<span class="tech-font font-black text-xl text-slate-500">${i+1}</span>`}
+                        </div>
                         <div>
                             <div class="font-bold text-slate-100 flex items-center gap-2">
                                 ${t.name}
@@ -625,10 +637,9 @@
                         <div class="tech-font font-bold text-emerald-400 text-xl group-hover:text-cyan-400 transition-colors">
                             ${t.score} <span class="text-[9px] text-slate-500">CM</span>
                         </div>
-                        <div class="text-[8px] text-slate-600 tech-font opacity-0 group-hover:opacity-100 uppercase">Click to Edit</div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function openEditModal(teamId) {
@@ -649,10 +660,7 @@
         function confirmEditScore() {
             const newVal = parseFloat(document.getElementById('edit-score-input').value) || 0;
             teams = teams.map(t => {
-                if (t.id === editingTeamId) {
-                    t.score = newVal;
-                    t.hasRaced = true; 
-                }
+                if (t.id === editingTeamId) { t.score = newVal; t.hasRaced = true; }
                 return t;
             });
             updateLeaderboard();
